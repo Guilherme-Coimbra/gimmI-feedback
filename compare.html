@@ -17,15 +17,15 @@
 
     <div class="comparison" id="comparison">
       <div class="answer-card">
-        <h3>Answer A</h3>
+        <h3 id="label-a">Answer A</h3>
         <p id="answer-a">Loading...</p>
-        <button class="btn" onclick="window.vote('A')">I prefer this answer</button>
+        <button class="btn" id="btn-a">I prefer this answer</button>
       </div>
 
       <div class="answer-card">
-        <h3>Answer B</h3>
+        <h3 id="label-b">Answer B</h3>
         <p id="answer-b">Loading...</p>
-        <button class="btn" onclick="window.vote('B')">I prefer this answer</button>
+        <button class="btn" id="btn-b">I prefer this answer</button>
       </div>
     </div>
 
@@ -45,13 +45,27 @@
       window.location.href = 'index.html';
     }
 
-    let currentQuestion = null;
+    let currentPair = null;
+
+    function shuffleArray(array) {
+      const arr = array.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
 
     async function loadNextQuestion() {
       const status = document.getElementById('status');
       const questionEl = document.getElementById('question-display');
       const comparisonEl = document.getElementById('comparison');
 
+      questionEl.style.display = 'block';
+      comparisonEl.style.display = 'flex';
+      status.style.display = 'none';
+
+      // Fetch all questions
       const { data: questions, error: qError } = await supabase
         .from('questions')
         .select('*');
@@ -73,6 +87,7 @@
         return;
       }
 
+      // Fetch this voter's existing votes
       const { data: votes, error: vError } = await supabase
         .from('votes')
         .select('external_qid')
@@ -94,41 +109,70 @@
         return;
       }
 
-      currentQuestion = remaining[0];
-      questionEl.textContent = '"' + currentQuestion.question_text + '"';
-      document.getElementById('answer-a').textContent = currentQuestion.answer_a;
-      document.getElementById('answer-b').textContent = currentQuestion.answer_b;
+      const question = remaining[0];
 
-      questionEl.style.display = 'block';
-      comparisonEl.style.display = 'flex';
-      status.style.display = 'none';
+      // Fetch all answers for this question
+      const { data: answers, error: aError } = await supabase
+        .from('answers')
+        .select('*')
+        .eq('external_qid', question.external_qid);
+
+      if (aError) {
+        console.error(aError);
+        status.textContent = 'Error loading answers. Please refresh.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+        return;
+      }
+
+      if (!answers || answers.length < 2) {
+        status.textContent = 'This question does not have enough answers to compare yet.';
+        status.style.color = 'var(--muted-color)';
+        status.style.display = 'block';
+        return;
+      }
+
+      // Pick two answers randomly (supports 3, 4, N answers)
+      const pair = shuffleArray(answers).slice(0, 2);
+      currentPair = { question: question, pair: pair };
+
+      questionEl.textContent = '"' + question.question_text + '"';
+
+      document.getElementById('label-a').textContent = 'Answer ' + pair[0].label;
+      document.getElementById('answer-a').textContent = pair[0].answer_text;
+
+      document.getElementById('label-b').textContent = 'Answer ' + pair[1].label;
+      document.getElementById('answer-b').textContent = pair[1].answer_text;
+
+      document.getElementById('btn-a').onclick = () => castVote(pair[0].label);
+      document.getElementById('btn-b').onclick = () => castVote(pair[1].label);
     }
 
-    window.vote = async function(choice) {
-      if (!currentQuestion) return;
+    async function castVote(chosenLabel) {
+      if (!currentPair) return;
 
       const { error } = await supabase
         .from('votes')
         .insert([{
-          external_qid: currentQuestion.external_qid,
+          external_qid: currentPair.question.external_qid,
           voter_id: voterId,
-          choice: choice
+          chosen_label: chosenLabel
         }]);
+
+      const status = document.getElementById('status');
 
       if (error) {
         console.error(error);
-        const status = document.getElementById('status');
         status.textContent = 'Error saving vote. Please try again.';
         status.style.color = '#c62828';
         status.style.display = 'block';
       } else {
-        const status = document.getElementById('status');
         status.textContent = 'Vote saved! Loading next question...';
         status.style.color = '#2e7d32';
         status.style.display = 'block';
         setTimeout(loadNextQuestion, 800);
       }
-    };
+    }
 
     loadNextQuestion();
   </script>
