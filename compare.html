@@ -13,41 +13,124 @@
     <h1 class="page-title">Compare Answers</h1>
     <p class="page-subtitle">Read both responses and click the one you prefer.</p>
 
-    <!-- Fake data for now; will be loaded from the database later -->
-    <div class="question-display">
-      "What are the main differences between CRISPR-Cas9 and CRISPR-Cas12a?"
-    </div>
+    <div class="question-display" id="question-display">Loading question...</div>
 
-    <div class="comparison">
+    <div class="comparison" id="comparison">
       <div class="answer-card">
         <h3>Answer A</h3>
-        <p>
-          CRISPR-Cas9 uses the nuclease SpCas9 guided by a single-guide RNA (sgRNA) to create blunt-ended double-strand breaks (DSBs) at target sites upstream of a PAM sequence (NGG). CRISPR-Cas12a (formerly Cpf1) uses a crRNA and creates staggered DSBs with a 5' overhang. Cas12a recognizes a TTTV PAM and cleaves DNA distal from the PAM. Additionally, Cas12a exhibits non-specific collateral cleavage of single-stranded DNA after target activation, which has been exploited for diagnostic applications such as SHERLOCK and DETECTR.
-        </p>
-        <button class="btn" onclick="vote('A')">I prefer this answer</button>
+        <p id="answer-a">Loading...</p>
+        <button class="btn" onclick="window.vote('A')">I prefer this answer</button>
       </div>
 
       <div class="answer-card">
         <h3>Answer B</h3>
-        <p>
-          The main differences are: Cas9 needs two RNA molecules (or a fused sgRNA) and makes blunt cuts, while Cas12a needs only one crRNA and makes staggered cuts. Cas9 prefers NGG PAMs; Cas12a prefers TTTV PAMs. Cas12a also cuts ssDNA nearby after it finds its target, which Cas9 does not do. This extra activity makes Cas12a useful for biosensors.
-        </p>
-        <button class="btn" onclick="vote('B')">I prefer this answer</button>
+        <p id="answer-b">Loading...</p>
+        <button class="btn" onclick="window.vote('B')">I prefer this answer</button>
       </div>
     </div>
 
-    <p id="status" style="margin-top: 1.5rem; color: var(--muted-color); display: none;"></p>
+    <p id="status" style="margin-top: 1.5rem; display: none;"></p>
   </div>
 
-  <script>
-    function vote(choice) {
-      // For now, just log the vote and show a thank-you message
-      // In the next lesson this will be saved to a database
-      console.log('User voted for:', choice);
-      const status = document.getElementById('status');
-      status.textContent = 'Thanks for voting! You chose Answer ' + choice + '. (Database save coming next.)';
-      status.style.display = 'block';
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hqbgbqhajargsgvyryrk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxYmdicWhhamFyZ3NndnlyeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NDAxMzQsImV4cCI6MjEwMDIxNjEzNH0.7F42Rtp2OiEEZKBN2XJXJhCOCX9WmIUlUVBxv9qkT5s';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const voterId = localStorage.getItem('voter_id');
+    if (!voterId) {
+      window.location.href = 'index.html';
     }
+
+    let currentQuestion = null;
+
+    async function loadNextQuestion() {
+      const status = document.getElementById('status');
+      const questionEl = document.getElementById('question-display');
+      const comparisonEl = document.getElementById('comparison');
+
+      const { data: questions, error: qError } = await supabase
+        .from('questions')
+        .select('*');
+
+      if (qError) {
+        console.error(qError);
+        status.textContent = 'Error loading questions. Please refresh.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+        return;
+      }
+
+      if (!questions || questions.length === 0) {
+        questionEl.style.display = 'none';
+        comparisonEl.style.display = 'none';
+        status.textContent = 'No questions available yet. Check back later!';
+        status.style.color = 'var(--muted-color)';
+        status.style.display = 'block';
+        return;
+      }
+
+      const { data: votes, error: vError } = await supabase
+        .from('votes')
+        .select('external_qid')
+        .eq('voter_id', voterId);
+
+      if (vError) {
+        console.error(vError);
+      }
+
+      const votedQids = new Set((votes || []).map(v => v.external_qid));
+      const remaining = questions.filter(q => !votedQids.has(q.external_qid));
+
+      if (remaining.length === 0) {
+        questionEl.style.display = 'none';
+        comparisonEl.style.display = 'none';
+        status.textContent = 'Great job! You have reviewed all available questions.';
+        status.style.color = '#2e7d32';
+        status.style.display = 'block';
+        return;
+      }
+
+      currentQuestion = remaining[0];
+      questionEl.textContent = '"' + currentQuestion.question_text + '"';
+      document.getElementById('answer-a').textContent = currentQuestion.answer_a;
+      document.getElementById('answer-b').textContent = currentQuestion.answer_b;
+
+      questionEl.style.display = 'block';
+      comparisonEl.style.display = 'flex';
+      status.style.display = 'none';
+    }
+
+    window.vote = async function(choice) {
+      if (!currentQuestion) return;
+
+      const { error } = await supabase
+        .from('votes')
+        .insert([{
+          external_qid: currentQuestion.external_qid,
+          voter_id: voterId,
+          choice: choice
+        }]);
+
+      if (error) {
+        console.error(error);
+        const status = document.getElementById('status');
+        status.textContent = 'Error saving vote. Please try again.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+      } else {
+        const status = document.getElementById('status');
+        status.textContent = 'Vote saved! Loading next question...';
+        status.style.color = '#2e7d32';
+        status.style.display = 'block';
+        setTimeout(loadNextQuestion, 800);
+      }
+    };
+
+    loadNextQuestion();
   </script>
 </body>
 </html>

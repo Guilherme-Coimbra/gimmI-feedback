@@ -22,35 +22,49 @@
       <div class="form-group">
         <label for="length">Preferred answer length</label>
         <select id="length" name="length">
-          <option value="short">Short (deep research summary)</option>
-          <option value="long">Long (deep research)</option>
+          <option value="short">Short (1–2 sentences)</option>
+          <option value="long">Long (detailed explanation)</option>
         </select>
       </div>
 
       <button type="submit" class="btn">Submit question</button>
     </form>
 
-    <p id="status" style="margin-top: 1rem; color: var(--muted-color); display: none;"></p>
+    <p id="status" style="margin-top: 1rem; display: none;"></p>
   </div>
 
-  <script>
-    // JavaScript handles what happens when the user submits the form
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hqbgbqhajargsgvyryrk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxYmdicWhhamFyZ3NndnlyeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NDAxMzQsImV4cCI6MjEwMDIxNjEzNH0.7F42Rtp2OiEEZKBN2XJXJhCOCX9WmIUlUVBxv9qkT5s';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const form = document.getElementById('submit-form');
     const status = document.getElementById('status');
 
-    form.addEventListener('submit', function(event) {
-      // Prevent the browser from reloading the page
+    form.addEventListener('submit', async function(event) {
       event.preventDefault();
 
-      // For now, just show a confirmation message
-      // In the next lesson we'll send this to a real database
       const question = document.getElementById('question').value;
       const length = document.getElementById('length').value;
 
-      console.log('Submitted:', { question, length });
-      status.textContent = 'Thanks! Your question has been logged (database connection coming next).'
-      status.style.display = 'block';
-      form.reset();
+      const { error } = await supabase
+        .from('submissions')
+        .insert([{ question_text: question, preferred_length: length }]);
+
+      if (error) {
+        console.error(error);
+        status.textContent = 'Something went wrong. Please try again.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+      } else {
+        status.textContent = 'Thanks! Your question has been saved.';
+        status.style.color = '#2e7d32';
+        status.style.display = 'block';
+        form.reset();
+      }
     });
   </script>
 </body>

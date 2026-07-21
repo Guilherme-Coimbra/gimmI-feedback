@@ -8,13 +8,52 @@
 </head>
 <body class="home">
   <div class="card">
-    <h1>Welcome to GimmI Feedback</h1>
+    <h1>GimmI Feedback</h1>
     <p>Help us improve our AI system for bio research.</p>
 
-    <div class="actions">
+    <div id="voter-section"></div>
+
+    <div class="actions" id="actions" style="display: none;">
       <a href="submit.html" class="btn">Submit a question for future feedback</a>
       <a href="compare.html" class="btn">Compare answers for feedback</a>
     </div>
   </div>
+
+  <script type="module">
+    const voterSection = document.getElementById('voter-section');
+    const actions = document.getElementById('actions');
+    const storedId = localStorage.getItem('voter_id');
+
+    if (storedId) {
+      voterSection.innerHTML = `
+        <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Reviewer ID: <strong>${storedId}</strong>
+          <a href="#" id="change-id" style="color: var(--accent-color); margin-left: 0.5rem;">(change)</a>
+        </p>`;
+      actions.style.display = 'flex';
+      document.getElementById('change-id').addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('voter_id');
+        location.reload();
+      });
+    } else {
+      voterSection.innerHTML = `
+        <form id="voter-form" style="margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label for="voter-id">Enter your reviewer ID</label>
+            <input type="text" id="voter-id" placeholder="e.g. reviewer_01" required>
+          </div>
+          <button type="submit" class="btn">Continue</button>
+        </form>`;
+      document.getElementById('voter-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('voter-id').value.trim();
+        if (id) {
+          localStorage.setItem('voter_id', id);
+          location.reload();
+        }
+      });
+    }
+  </script>
 </body>
 </html>
