@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit a Question — GimmI Feedback</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="nav"><a href="index.html">← Back to home</a></nav>
+
+    <h1 class="page-title">Submit a Question</h1>
+    <p class="page-subtitle">Suggest a question you'd like our AI to answer in a future evaluation.</p>
+
+    <form id="submit-form">
+      <div class="form-group">
+        <label for="question">Your question</label>
+        <textarea id="question" name="question" placeholder="e.g. What is the role of protein X in pathway Y?" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="length">Preferred answer length</label>
+        <select id="length" name="length">
+          <option value="short">Short (deep research summary)</option>
+          <option value="long">Long (deep research)</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn">Submit question</button>
+    </form>
+
+    <p id="status" style="margin-top: 1rem; color: var(--muted-color); display: none;"></p>
+  </div>
+
+  <script>
+    // JavaScript handles what happens when the user submits the form
+    const form = document.getElementById('submit-form');
+    const status = document.getElementById('status');
+
+    form.addEventListener('submit', function(event) {
+      // Prevent the browser from reloading the page
+      event.preventDefault();
+
+      // For now, just show a confirmation message
+      // In the next lesson we'll send this to a real database
+      const question = document.getElementById('question').value;
+      const length = document.getElementById('length').value;
+
+      console.log('Submitted:', { question, length });
+      status.textContent = 'Thanks! Your question has been logged (database connection coming next).'
+      status.style.display = 'block';
+      form.reset();
+    });
+  </script>
+</body>
+</html>

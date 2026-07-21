@@ -1,6 +1,5 @@
 /* GimmI Feedback — Main stylesheet */
 
-/* CSS Variables: define colors once, use everywhere */
 :root {
   --bg-color: #f8f9fa;
   --card-bg: #ffffff;
@@ -13,26 +12,27 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-/* Reset: remove default browser margins/padding */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Body: full viewport, centered content */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   padding: 2rem;
 }
 
-/* Card: the white box in the center */
+/* Home page: centered card */
+body.home {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .card {
   background-color: var(--card-bg);
   border-radius: var(--radius);
@@ -43,15 +43,12 @@ body {
   text-align: center;
 }
 
-/* Heading */
 .card h1 {
   font-size: 1.75rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
-  color: var(--text-color);
 }
 
-/* Subtitle */
 .card p {
   font-size: 1rem;
   color: var(--muted-color);
@@ -59,15 +56,19 @@ body {
   line-height: 1.5;
 }
 
-/* Buttons container */
 .actions {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-/* Button styling */
-.actions button {
+.actions a {
+  text-decoration: none;
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
   font-family: inherit;
   font-size: 1rem;
   font-weight: 500;
@@ -77,13 +78,133 @@ body {
   border-radius: var(--radius);
   padding: 0.9rem 1.5rem;
   cursor: pointer;
+  text-align: center;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.actions button:hover {
+.btn:hover {
   background-color: var(--accent-hover);
 }
 
-.actions button:active {
+.btn:active {
   transform: scale(0.98);
+}
+
+/* General page layout */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: var(--muted-color);
+  margin-bottom: 2rem;
+}
+
+/* Navigation */
+.nav {
+  margin-bottom: 2rem;
+}
+
+.nav a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 1rem;
+  background-color: var(--card-bg);
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+}
+
+/* Comparison layout */
+.question-display {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+.comparison {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.answer-card {
+  flex: 1;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.answer-card h3 {
+  font-size: 1rem;
+  color: var(--muted-color);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.answer-card p {
+  flex-grow: 1;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.answer-card .btn {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .comparison {
+    flex-direction: column;
+  }
 }
