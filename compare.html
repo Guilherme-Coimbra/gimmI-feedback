@@ -56,7 +56,17 @@
       return arr;
     }
 
-    async function loadNextQuestion() {
+    function getAllPairs(labels) {
+      const pairs = [];
+      for (let i = 0; i < labels.length; i++) {
+        for (let j = i + 1; j < labels.length; j++) {
+          pairs.push([labels[i], labels[j]]);
+        }
+      }
+      return pairs;
+    }
+
+    async function loadNextPair() {
       const status = document.getElementById('status');
       const questionEl = document.getElementById('question-display');
       const comparisonEl = document.getElementById('comparison');
@@ -65,14 +75,20 @@
       comparisonEl.style.display = 'flex';
       status.style.display = 'none';
 
-      // Fetch all questions
-      const { data: questions, error: qError } = await supabase
-        .from('questions')
-        .select('*');
+      // Fetch everything in parallel
+      const [
+        { data: questions, error: qError },
+        { data: allAnswers, error: aError },
+        { data: allVotes, error: vError }
+      ] = await Promise.all([
+        supabase.from('questions').select('*'),
+        supabase.from('answers').select('*'),
+        supabase.from('votes').select('*').eq('voter_id', voterId)
+      ]);
 
-      if (qError) {
-        console.error(qError);
-        status.textContent = 'Error loading questions. Please refresh.';
+      if (qError || aError || vError) {
+        console.error(qError, aError, vError);
+        status.textContent = 'Error loading data. Please refresh.';
         status.style.color = '#c62828';
         status.style.display = 'block';
         return;
@@ -87,68 +103,78 @@
         return;
       }
 
-      // Fetch this voter's existing votes
-      const { data: votes, error: vError } = await supabase
-        .from('votes')
-        .select('external_qid')
-        .eq('voter_id', voterId);
+      // Group answers and votes by external_qid
+      const answersByQid = {};
+      (allAnswers || []).forEach(a => {
+        if (!answersByQid[a.external_qid]) answersByQid[a.external_qid] = [];
+        answersByQid[a.external_qid].push(a);
+      });
 
-      if (vError) {
-        console.error(vError);
+      const votesByQid = {};
+      (allVotes || []).forEach(v => {
+        if (!votesByQid[v.external_qid]) votesByQid[v.external_qid] = [];
+        votesByQid[v.external_qid].push(v);
+      });
+
+      // Find the first question with a remaining pair
+      for (const question of questions) {
+        const answers = answersByQid[question.external_qid];
+        if (!answers || answers.length < 2) continue;
+
+        const labels = answers.map(a => a.label);
+        const allPairs = getAllPairs(labels);
+        const votes = votesByQid[question.external_qid] || [];
+
+        // Build a set of already-voted pairs (order-independent)
+        const votedSet = new Set();
+        votes.forEach(v => {
+          const key = [v.option_a_label, v.option_b_label].sort().join('-');
+          votedSet.add(key);
+        });
+
+        const remainingPairs = allPairs.filter(pair => {
+          const key = pair.slice().sort().join('-');
+          return !votedSet.has(key);
+        });
+
+        if (remainingPairs.length > 0) {
+          // Pick a random remaining pair and shuffle left/right order
+          const pair = remainingPairs[Math.floor(Math.random() * remainingPairs.length)];
+          if (Math.random() > 0.5) pair.reverse();
+
+          const ansA = answers.find(a => a.label === pair[0]);
+          const ansB = answers.find(a => a.label === pair[1]);
+
+          currentPair = {
+            question: question,
+            optionA: ansA,
+            optionB: ansB
+          };
+
+          questionEl.textContent = '"' + question.question_text + '"';
+
+          document.getElementById('label-a').textContent = 'Answer ' + ansA.label;
+          document.getElementById('answer-a').textContent = ansA.answer_text;
+
+          document.getElementById('label-b').textContent = 'Answer ' + ansB.label;
+          document.getElementById('answer-b').textContent = ansB.answer_text;
+
+          document.getElementById('btn-a').onclick = () => castVote(ansA.label);
+          document.getElementById('btn-b').onclick = () => castVote(ansB.label);
+
+          return;
+        }
       }
 
-      const votedQids = new Set((votes || []).map(v => v.external_qid));
-      const remaining = questions.filter(q => !votedQids.has(q.external_qid));
-
-      if (remaining.length === 0) {
-        questionEl.style.display = 'none';
-        comparisonEl.style.display = 'none';
-        status.textContent = 'Great job! You have reviewed all available questions.';
-        status.style.color = '#2e7d32';
-        status.style.display = 'block';
-        return;
-      }
-
-      const question = remaining[0];
-
-      // Fetch all answers for this question
-      const { data: answers, error: aError } = await supabase
-        .from('answers')
-        .select('*')
-        .eq('external_qid', question.external_qid);
-
-      if (aError) {
-        console.error(aError);
-        status.textContent = 'Error loading answers. Please refresh.';
-        status.style.color = '#c62828';
-        status.style.display = 'block';
-        return;
-      }
-
-      if (!answers || answers.length < 2) {
-        status.textContent = 'This question does not have enough answers to compare yet.';
-        status.style.color = 'var(--muted-color)';
-        status.style.display = 'block';
-        return;
-      }
-
-      // Pick two answers randomly (supports 3, 4, N answers)
-      const pair = shuffleArray(answers).slice(0, 2);
-      currentPair = { question: question, pair: pair };
-
-      questionEl.textContent = '"' + question.question_text + '"';
-
-      document.getElementById('label-a').textContent = 'Answer ' + pair[0].label;
-      document.getElementById('answer-a').textContent = pair[0].answer_text;
-
-      document.getElementById('label-b').textContent = 'Answer ' + pair[1].label;
-      document.getElementById('answer-b').textContent = pair[1].answer_text;
-
-      document.getElementById('btn-a').onclick = () => castVote(pair[0].label);
-      document.getElementById('btn-b').onclick = () => castVote(pair[1].label);
+      // No remaining pairs across all questions
+      questionEl.style.display = 'none';
+      comparisonEl.style.display = 'none';
+      status.textContent = 'Great job! You have reviewed all available questions.';
+      status.style.color = '#2e7d32';
+      status.style.display = 'block';
     }
 
-    async function castVote(chosenLabel) {
+    async function castVote(winnerLabel) {
       if (!currentPair) return;
 
       const { error } = await supabase
@@ -156,7 +182,9 @@
         .insert([{
           external_qid: currentPair.question.external_qid,
           voter_id: voterId,
-          chosen_label: chosenLabel
+          option_a_label: currentPair.optionA.label,
+          option_b_label: currentPair.optionB.label,
+          winner_label: winnerLabel
         }]);
 
       const status = document.getElementById('status');
@@ -167,14 +195,14 @@
         status.style.color = '#c62828';
         status.style.display = 'block';
       } else {
-        status.textContent = 'Vote saved! Loading next question...';
+        status.textContent = 'Vote saved! Loading next comparison...';
         status.style.color = '#2e7d32';
         status.style.display = 'block';
-        setTimeout(loadNextQuestion, 800);
+        setTimeout(loadNextPair, 800);
       }
     }
 
-    loadNextQuestion();
+    loadNextPair();
   </script>
 </body>
 </html>
