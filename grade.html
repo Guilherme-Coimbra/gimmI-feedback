@@ -228,6 +228,7 @@
         status.textContent = 'Grading submitted! Loading next answer...';
         status.style.color = '#2e7d32';
         status.style.display = 'block';
+        window.scrollTo(0, 0);
         document.getElementById('grading-form').reset();
         document.querySelectorAll('.grade-option.selected').forEach(el => {
           el.classList.remove('selected');
