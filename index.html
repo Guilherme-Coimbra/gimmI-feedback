@@ -25,6 +25,16 @@
   <script type="module">
     const voterSection = document.getElementById('voter-section');
     const actions = document.getElementById('actions');
+
+    // A personal link (?id=...) assigns the reviewer ID, so people who already
+    // answered the Google Form are recognised without having to type anything.
+    // The parameter is stripped afterwards so the ID is not left in the URL bar.
+    const assignedId = new URLSearchParams(location.search).get('id');
+    if (assignedId) {
+      localStorage.setItem('voter_id', assignedId.trim());
+      history.replaceState(null, '', location.pathname);
+    }
+
     const storedId = localStorage.getItem('voter_id');
 
     if (storedId) {

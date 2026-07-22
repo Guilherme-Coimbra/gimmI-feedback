@@ -170,6 +170,13 @@
         const n = labels.length;
         const votes = votesByQid[question.external_qid] || [];
 
+        // Votes carried over from the Google Form are round-robin (round 0)
+        // rather than bracket matches, so they never resolve a bracket slot.
+        // Treat the question as already answered instead of asking again —
+        // preference_votes has no uniqueness constraint, so a redone tournament
+        // would be added on top of their existing ranking.
+        if (votes.some(v => v.round_number === 0)) continue;
+
         if (n <= 4) {
           // Bracket mode
           const order = getBracketOrder(question.external_qid, labels);
