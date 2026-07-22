@@ -485,6 +485,16 @@ body.home {
   resize: vertical;
 }
 
+.submission-select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
 .submission-actions {
   display: flex;
   align-items: center;
