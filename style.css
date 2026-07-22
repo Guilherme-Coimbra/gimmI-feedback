@@ -585,7 +585,18 @@ body.home {
   height: 100%;
 }
 
+/* The fill is a percentage of the track's content box, so the padding always
+   leaves room for the count above a full-height bar. */
+.hist-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding-top: 1.4rem;
+}
+
 .hist-fill {
+  position: relative;
   width: 100%;
   background: var(--accent-color);
   border-radius: 4px 4px 0 0;
@@ -593,14 +604,22 @@ body.home {
   transition: height 0.3s ease;
 }
 
-.hist-label {
-  margin-top: 0.5rem;
+/* The count is the value, so it sits directly on top of its own bar as the
+   prominent label; the score below reads as an axis tick. */
+.hist-count {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 0.25rem;
+  text-align: center;
   font-weight: 600;
   font-size: 0.9rem;
 }
 
-.hist-count {
-  font-size: 0.8rem;
+.hist-label {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
   color: var(--muted-color);
 }
 

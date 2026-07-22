@@ -53,18 +53,18 @@
       <div id="transition-matrix"></div>
     </section>
 
-    <!-- Submitted questions -->
-    <section class="dashboard-section">
-      <h2>Submitted Questions</h2>
-      <p class="section-desc">Questions suggested through the submission form, with the preferred answer length and the topics each answer should cover. Submitters are not identified.</p>
-      <div id="submissions-list"></div>
-    </section>
-
     <!-- Preferences Detail -->
     <section class="dashboard-section">
       <h2>Preferences by Question</h2>
       <p class="section-desc">Click a question to see how often each model took each preference position, and expand any answer to read it.</p>
       <div id="preferences-detail"></div>
+    </section>
+
+    <!-- Submitted questions -->
+    <section class="dashboard-section">
+      <h2>Submitted Questions</h2>
+      <p class="section-desc">Questions suggested through the submission form, with the preferred answer length and the topics each answer should cover. Submitters are not identified.</p>
+      <div id="submissions-list"></div>
     </section>
   </div>
 
@@ -326,9 +326,12 @@
               <div class="mini-histogram">
                 ${scoreValues.map(v => `
                   <div class="hist-bar">
-                    <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%"></div>
+                    <div class="hist-track">
+                      <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%">
+                        <div class="hist-count">${counts[v]}</div>
+                      </div>
+                    </div>
                     <div class="hist-label">${v}</div>
-                    <div class="hist-count">${counts[v]}</div>
                   </div>
                 `).join('')}
               </div>
