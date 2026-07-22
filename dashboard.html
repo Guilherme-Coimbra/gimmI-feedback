@@ -181,7 +181,7 @@
           .select('id, question_text, answer_aspects, preferred_length, created_at')
           .order('created_at', { ascending: false }),
         supabase.from('submission_versions')
-          .select('submission_id, version, question_text, answer_aspects, created_at')
+          .select('submission_id, version, question_text, answer_aspects, preferred_length, created_at')
           .order('version', { ascending: true })
       ]);
 
@@ -220,9 +220,23 @@
       submissions.forEach(s => {
         // The submissions row is version 1; edits are appended after it.
         const history = [
-          { version: 1, question_text: s.question_text, answer_aspects: s.answer_aspects, created_at: s.created_at },
+          {
+            version: 1,
+            question_text: s.question_text,
+            answer_aspects: s.answer_aspects,
+            preferred_length: s.preferred_length,
+            created_at: s.created_at
+          },
           ...(versionsBySubmission[s.id] || [])
         ].sort((a, b) => a.version - b.version);
+
+        // Versions saved before length was versioned carry NULL, so inherit the
+        // last length that was actually recorded.
+        let lastLength = s.preferred_length;
+        history.forEach(v => {
+          if (v.preferred_length) lastLength = v.preferred_length;
+          else v.preferred_length = lastLength;
+        });
 
         container.appendChild(buildSubmissionCard(s, history));
       });
@@ -249,7 +263,7 @@
 
         const length = document.createElement('span');
         length.className = 'submission-chip';
-        length.textContent = submission.preferred_length === 'short' ? 'Short answer' : 'Long answer';
+        length.textContent = current.preferred_length === 'short' ? 'Short answer' : 'Long answer';
         meta.appendChild(length);
 
         if (history.length > 1) {
@@ -312,6 +326,19 @@
         tInput.className = 'submission-input';
         tInput.value = base.answer_aspects || '';
 
+        const lLabel = document.createElement('div');
+        lLabel.className = 'sub-heading';
+        lLabel.textContent = 'Preferred answer length';
+        const lInput = document.createElement('select');
+        lInput.className = 'submission-select';
+        [['short', 'Short (1–2 sentences)'], ['long', 'Long (detailed explanation)']].forEach(([value, text]) => {
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = text;
+          if (base.preferred_length === value) opt.selected = true;
+          lInput.appendChild(opt);
+        });
+
         const error = document.createElement('p');
         error.className = 'submission-error';
         error.style.display = 'none';
@@ -340,7 +367,10 @@
           }
 
           const aspects = tInput.value.trim();
-          if (questionText === base.question_text && aspects === (base.answer_aspects || '').trim()) {
+          const length = lInput.value;
+          if (questionText === base.question_text &&
+              aspects === (base.answer_aspects || '').trim() &&
+              length === base.preferred_length) {
             render();
             return;
           }
@@ -356,9 +386,10 @@
               version: nextVersion,
               question_text: questionText,
               answer_aspects: aspects,
+              preferred_length: length,
               edited_by: reviewerId
             }])
-            .select('submission_id, version, question_text, answer_aspects, created_at')
+            .select('submission_id, version, question_text, answer_aspects, preferred_length, created_at')
             .single();
 
           if (saveError) {
@@ -379,6 +410,8 @@
         card.appendChild(qInput);
         card.appendChild(tLabel);
         card.appendChild(tInput);
+        card.appendChild(lLabel);
+        card.appendChild(lInput);
         card.appendChild(error);
         card.appendChild(actions);
       }
