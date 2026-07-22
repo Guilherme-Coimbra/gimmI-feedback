@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feedback Dashboard — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="answer-format.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -42,7 +43,7 @@
     <section class="dashboard-section">
       <h2>Preferences Overview</h2>
       <p class="section-desc">How often each model was ranked 1st, 2nd, 3rd, or 4th across all bracket tournaments.</p>
-      <div class="chart-container">
+      <div class="chart-container chart-fixed">
         <canvas id="preferences-global-chart"></canvas>
       </div>
 
@@ -54,7 +55,7 @@
     <!-- Preferences Detail -->
     <section class="dashboard-section">
       <h2>Preferences by Question</h2>
-      <p class="section-desc">Click a question to expand and see answer rankings and model performance.</p>
+      <p class="section-desc">Click a question to see how often each model took each preference position, and expand any answer to read it.</p>
       <div id="preferences-detail"></div>
     </section>
   </div>
@@ -68,6 +69,46 @@
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let charts = {};
+
+    // Preference rank is an ordinal scale (1st is better than 3rd), so it gets a
+    // single-hue ramp, darkest at 1st — not one hue per rank. Validated for
+    // monotone lightness, step gaps and surface contrast against #ffffff.
+    const PREF_COLORS = ['#1c5cab', '#2a78d6', '#5598e7', '#86b6ef'];
+    const ORDINALS = ['1st', '2nd', '3rd', '4th'];
+    const prefLabel = n => (ORDINALS[n - 1] || n + 'th') + ' Preference';
+
+    // 2px surface-coloured gap between stacked segments; only the topmost
+    // segment rounds, so the stack stays anchored to the baseline.
+    function prefDataset(rank, data, isTop) {
+      return {
+        label: prefLabel(rank),
+        data: data,
+        backgroundColor: PREF_COLORS[rank - 1] || PREF_COLORS[PREF_COLORS.length - 1],
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        borderRadius: isTop ? { topLeft: 4, topRight: 4 } : 0,
+        borderSkipped: false,
+        maxBarThickness: 72
+      };
+    }
+
+    const prefChartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, boxHeight: 12, usePointStyle: false } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: '#52514e' } },
+        y: {
+          stacked: true, beginAtZero: true,
+          ticks: { stepSize: 1, color: '#898781' },
+          grid: { color: '#e1e0d9' },
+          border: { display: false }
+        }
+      }
+    };
 
     async function init() {
       const [
@@ -186,7 +227,7 @@
         answerLabel.textContent = 'Answer:';
         const answerText = document.createElement('p');
         answerText.style.marginTop = '0.5rem';
-        answerText.textContent = item.answer_text;
+        answerText.textContent = formatAnswerText(item.answer_text);
         answerBox.appendChild(answerLabel);
         answerBox.appendChild(answerText);
         body.appendChild(answerBox);
@@ -370,35 +411,23 @@
         return;
       }
 
-      // Stacked bar: models × ranks
+      // Stacked bar: models × preference position
       const models = [...new Set(validRankings.flatMap(r => r.ranks.map(rank => rank.model)))].sort();
       const maxRank = Math.max(...validRankings.flatMap(r => r.ranks.map(rank => rank.rank)));
-      const rankColors = ['#2e7d32', '#0066cc', '#fbc02d', '#c62828', '#6c757d'];
 
       const datasets = [];
       for (let rank = 1; rank <= maxRank; rank++) {
         const data = models.map(model => {
           return validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model && rankObj.rank === rank)).length;
         });
-        datasets.push({
-          label: 'Rank ' + rank,
-          data: data,
-          backgroundColor: rankColors[rank - 1] || '#999'
-        });
+        datasets.push(prefDataset(rank, data, rank === maxRank));
       }
 
       const ctx = document.getElementById('preferences-global-chart').getContext('2d');
       charts.preferencesGlobal = new Chart(ctx, {
         type: 'bar',
         data: { labels: models, datasets: datasets },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
-          }
-        }
+        options: prefChartOptions
       });
 
       // Transition matrix: rank1 model → rank2 model
@@ -473,15 +502,20 @@
         body.className = 'accordion-body';
         body.style.display = 'none';
 
-        if (qRankings.length === 0) {
-          body.innerHTML = '<p style="color:var(--muted-color);margin-top:1rem;">No completed rankings yet.</p>';
-        } else {
-          // Aggregate ranks per model
-          const modelRankCounts = {};
-          qAnswers.forEach(a => {
-            modelRankCounts[a.metadata.model] = { 1: 0, 2: 0, 3: 0, 4: 0 };
-          });
+        let buildChart = null;
 
+        if (qRankings.length === 0) {
+          const none = document.createElement('p');
+          none.style.color = 'var(--muted-color)';
+          none.style.marginTop = '1rem';
+          none.textContent = 'No completed rankings yet.';
+          body.appendChild(none);
+        } else {
+          const models = qAnswers.map(a => a.metadata.model);
+          const maxRank = qAnswers.length;
+
+          const modelRankCounts = {};
+          models.forEach(m => { modelRankCounts[m] = {}; });
           qRankings.forEach(r => {
             r.ranks.forEach(rank => {
               if (modelRankCounts[rank.model]) {
@@ -490,31 +524,72 @@
             });
           });
 
-          const table = document.createElement('table');
-          table.className = 'detail-table';
-          table.innerHTML = `
-            <thead><tr><th>Model</th><th>Answer</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th></tr></thead>
-            <tbody>
-              ${qAnswers.map(a => {
-                const counts = modelRankCounts[a.metadata.model] || {};
-                return `<tr>
-                  <td>${a.metadata.model}</td>
-                  <td>${a.label}</td>
-                  <td>${counts[1] || 0}</td>
-                  <td>${counts[2] || 0}</td>
-                  <td>${counts[3] || 0}</td>
-                  <td>${counts[4] || 0}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          `;
-          body.appendChild(table);
+          const datasets = [];
+          for (let rank = 1; rank <= maxRank; rank++) {
+            const data = models.map(m => modelRankCounts[m][rank] || 0);
+            datasets.push(prefDataset(rank, data, rank === maxRank));
+          }
+
+          const chartBox = document.createElement('div');
+          chartBox.className = 'chart-inline';
+          const canvas = document.createElement('canvas');
+          chartBox.appendChild(canvas);
+          body.appendChild(chartBox);
+
+          // Chart.js cannot measure a canvas inside a display:none parent, so
+          // hold off until the accordion is opened for the first time.
+          buildChart = () => new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: { labels: models, datasets: datasets },
+            options: prefChartOptions
+          });
         }
+
+        const heading = document.createElement('h4');
+        heading.className = 'sub-heading';
+        heading.textContent = 'Answers';
+        body.appendChild(heading);
+
+        qAnswers.forEach(a => {
+          const item = document.createElement('div');
+          item.className = 'answer-toggle-item';
+
+          const toggle = document.createElement('button');
+          toggle.className = 'answer-toggle';
+          toggle.type = 'button';
+          const modelSpan = document.createElement('span');
+          modelSpan.className = 'answer-model';
+          modelSpan.textContent = a.metadata.model;
+          const chip = document.createElement('span');
+          chip.className = 'answer-label-chip';
+          chip.textContent = 'Answer ' + a.label;
+          toggle.appendChild(modelSpan);
+          toggle.appendChild(chip);
+
+          const text = document.createElement('div');
+          text.className = 'answer-toggle-body';
+          text.style.display = 'none';
+          text.textContent = formatAnswerText(a.answer_text);
+
+          toggle.addEventListener('click', () => {
+            const open = text.style.display === 'block';
+            text.style.display = open ? 'none' : 'block';
+            toggle.classList.toggle('open', !open);
+          });
+
+          item.appendChild(toggle);
+          item.appendChild(text);
+          body.appendChild(item);
+        });
 
         header.addEventListener('click', () => {
           const isOpen = body.style.display === 'block';
           body.style.display = isOpen ? 'none' : 'block';
           header.classList.toggle('open', !isOpen);
+          if (!isOpen && buildChart) {
+            buildChart();
+            buildChart = null;
+          }
         });
 
         accordion.appendChild(header);

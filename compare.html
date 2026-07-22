@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compare Answers — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="answer-format.js"></script>
 </head>
 <body>
   <div class="container">
@@ -218,9 +219,9 @@
 
             questionEl.textContent = '"' + question.question_text + '"';
             document.getElementById('label-a').textContent = 'Answer ' + ansA.label;
-            document.getElementById('answer-a').textContent = ansA.answer_text;
+            document.getElementById('answer-a').textContent = formatAnswerText(ansA.answer_text);
             document.getElementById('label-b').textContent = 'Answer ' + ansB.label;
-            document.getElementById('answer-b').textContent = ansB.answer_text;
+            document.getElementById('answer-b').textContent = formatAnswerText(ansB.answer_text);
             document.getElementById('btn-a').onclick = () => castVote(ansA.label);
             document.getElementById('btn-b').onclick = () => castVote(ansB.label);
 
@@ -257,9 +258,9 @@
 
             questionEl.textContent = '"' + question.question_text + '"';
             document.getElementById('label-a').textContent = 'Answer ' + ansA.label;
-            document.getElementById('answer-a').textContent = ansA.answer_text;
+            document.getElementById('answer-a').textContent = formatAnswerText(ansA.answer_text);
             document.getElementById('label-b').textContent = 'Answer ' + ansB.label;
-            document.getElementById('answer-b').textContent = ansB.answer_text;
+            document.getElementById('answer-b').textContent = formatAnswerText(ansB.answer_text);
             document.getElementById('btn-a').onclick = () => castVote(ansA.label);
             document.getElementById('btn-b').onclick = () => castVote(ansB.label);
 

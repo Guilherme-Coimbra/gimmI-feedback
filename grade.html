@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grade Answers — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="answer-format.js"></script>
 </head>
 <body>
   <div class="container">
@@ -114,7 +115,7 @@
 
     function renderForm() {
       document.getElementById('question-display').textContent = '"' + currentItem.question_text + '"';
-      document.getElementById('answer-display').textContent = currentItem.answer_text;
+      document.getElementById('answer-display').textContent = formatAnswerText(currentItem.answer_text);
 
       const container = document.getElementById('criteria-container');
       container.innerHTML = '';
