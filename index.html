@@ -23,53 +23,132 @@
   </div>
 
   <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hqbgbqhajargsgvyryrk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxYmdicWhhamFyZ3NndnlyeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NDAxMzQsImV4cCI6MjEwMDIxNjEzNH0.7F42Rtp2OiEEZKBN2XJXJhCOCX9WmIUlUVBxv9qkT5s';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const voterSection = document.getElementById('voter-section');
     const actions = document.getElementById('actions');
 
-    // A personal link (?id=...) assigns the reviewer ID, so people who already
-    // answered the Google Form are recognised without having to type anything.
-    // The parameter is stripped afterwards so the ID is not left in the URL bar.
-    const assignedId = new URLSearchParams(location.search).get('id');
-    if (assignedId) {
-      localStorage.setItem('voter_id', assignedId.trim());
-      history.replaceState(null, '', location.pathname);
-    }
+    // Everyone picks their own reviewer ID. People whose answers are already in
+    // the database (from the Google Form, stored under forms_respondent_N) get a
+    // one-time claim link; the ID they choose there is recorded as an alias for
+    // their existing one, so typing it on any device later finds their work and
+    // they are never tied to the link. This page is the only place an ID is
+    // entered, so it is the only place that has to resolve aliases.
+    const claimId = new URLSearchParams(location.search).get('claim');
+    if (claimId) history.replaceState(null, '', location.pathname);
 
     const storedId = localStorage.getItem('voter_id');
 
-    if (storedId) {
-      voterSection.innerHTML = `
-        <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.5rem;">
-          Reviewer ID: <strong>${storedId}</strong>
-          <a href="#" id="change-id" style="color: var(--accent-color); margin-left: 0.5rem;">(change)</a>
-        </p>`;
-      actions.style.display = 'flex';
-      document.getElementById('change-id').addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('voter_id');
-        location.reload();
-      });
-    } else {
+    function signIn(canonicalId, label) {
+      localStorage.setItem('voter_id', canonicalId);
+      localStorage.setItem('voter_label', label);
+      location.reload();
+    }
+
+    function showIdForm(intro, onSubmit) {
       voterSection.innerHTML = `
         <form id="voter-form" style="margin-bottom: 1.5rem;">
           <div class="form-group">
-            <label for="voter-id">Enter your reviewer ID</label>
+            <label for="voter-id">${intro}</label>
             <input type="text" id="voter-id" placeholder="e.g. gc01052003" required>
             <p style="font-size: 0.85rem; color: var(--muted-color); margin-top: 0.5rem; line-height: 1.4;">
               Choose any ID you like, but use the same one every time.<br>
               Tip: first initials + birthdate (e.g. <strong>gc01052003</strong>)
             </p>
+            <p id="voter-error" style="font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; display: none;"></p>
           </div>
           <button type="submit" class="btn">Continue</button>
         </form>`;
-      document.getElementById('voter-form').addEventListener('submit', (e) => {
+
+      const form = document.getElementById('voter-form');
+      const errorEl = document.getElementById('voter-error');
+
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('voter-id').value.trim();
-        if (id) {
-          localStorage.setItem('voter_id', id);
-          location.reload();
-        }
+        if (!id) return;
+        errorEl.style.display = 'none';
+        form.querySelector('button').disabled = true;
+        await onSubmit(id, message => {
+          errorEl.textContent = message;
+          errorEl.style.display = 'block';
+          form.querySelector('button').disabled = false;
+        });
       });
+    }
+
+    // Resolve a typed ID through the alias table before using it.
+    async function signInWithTypedId(id, fail) {
+      const { data, error } = await supabase
+        .from('reviewer_aliases')
+        .select('canonical_id')
+        .eq('alias_id', id)
+        .maybeSingle();
+
+      if (error) {
+        fail('Could not reach the server. Please try again.');
+        return;
+      }
+      signIn(data ? data.canonical_id : id, id);
+    }
+
+    async function startClaim(canonicalId) {
+      const { data: alreadyClaimed, error } = await supabase
+        .from('reviewer_aliases')
+        .select('alias_id')
+        .eq('canonical_id', canonicalId)
+        .maybeSingle();
+
+      if (error) {
+        showIdForm('Enter your reviewer ID', signInWithTypedId);
+        return;
+      }
+
+      if (alreadyClaimed) {
+        showIdForm('This link has already been used — enter the reviewer ID you chose', signInWithTypedId);
+        return;
+      }
+
+      showIdForm(
+        'Welcome back! Your earlier answers are already saved — choose the reviewer ID you will use from now on',
+        async (id, fail) => {
+          const { error: claimError } = await supabase
+            .from('reviewer_aliases')
+            .insert([{ alias_id: id, canonical_id: canonicalId }]);
+
+          if (claimError) {
+            fail('That ID is already taken. Please choose a different one.');
+            return;
+          }
+          signIn(canonicalId, id);
+        }
+      );
+    }
+
+    if (storedId) {
+      const label = localStorage.getItem('voter_label') || storedId;
+      voterSection.innerHTML = `
+        <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Reviewer ID: <strong></strong>
+          <a href="#" id="change-id" style="color: var(--accent-color); margin-left: 0.5rem;">(change)</a>
+        </p>`;
+      voterSection.querySelector('strong').textContent = label;
+      actions.style.display = 'flex';
+      document.getElementById('change-id').addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('voter_id');
+        localStorage.removeItem('voter_label');
+        location.reload();
+      });
+    } else if (claimId) {
+      await startClaim(claimId);
+    } else {
+      showIdForm('Enter your reviewer ID', signInWithTypedId);
     }
   </script>
 </body>
