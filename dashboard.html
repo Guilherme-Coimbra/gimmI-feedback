@@ -76,6 +76,10 @@
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // Anyone with a reviewer ID may refine a submitted question; visitors
+    // without one still see the history but get no edit control.
+    const reviewerId = localStorage.getItem('voter_id');
+
     // Both preference position (1st..4th) and grading score (5/3/1) are ordinal
     // scales, so both use one single-hue ramp with the best value darkest —
     // never a hue per level. The steps live in style.css so each theme carries
@@ -161,7 +165,8 @@
         { data: options, error: oErr },
         { data: gradings, error: gErr },
         { data: prefVotes, error: pErr },
-        { data: submissions, error: sErr }
+        { data: submissions, error: sErr },
+        { data: versions, error: vErr }
       ] = await Promise.all([
         supabase.from('questions').select('*'),
         supabase.from('answers').select('*'),
@@ -172,9 +177,16 @@
         supabase.from('preference_votes').select('*'),
         // voter_id is deliberately left out so it never reaches the browser.
         supabase.from('submissions')
-          .select('question_text, answer_aspects, preferred_length, created_at')
-          .order('created_at', { ascending: false })
+          .select('id, question_text, answer_aspects, preferred_length, created_at')
+          .order('created_at', { ascending: false }),
+        supabase.from('submission_versions')
+          .select('submission_id, version, question_text, answer_aspects, created_at')
+          .order('version', { ascending: true })
       ]);
+
+      // Revision history is an enhancement: if that table is unavailable the
+      // rest of the dashboard should still load, showing the original wording.
+      if (vErr) console.warn('submission_versions unavailable, showing originals only', vErr);
 
       if (qErr || aErr || giErr || cErr || oErr || gErr || pErr || sErr) {
         console.error(qErr, aErr, giErr, cErr, oErr, gErr, pErr, sErr);
@@ -186,11 +198,11 @@
       renderGradingsGlobal(gradings, criteria, options);
       renderGradingsDetail(gradings, gradeItems, criteria, options);
       renderPreferencesGlobal(prefVotes, answers, questions);
-      renderSubmissions(submissions);
+      renderSubmissions(submissions, versions);
       renderPreferencesDetail(prefVotes, answers, questions);
     }
 
-    function renderSubmissions(submissions) {
+    function renderSubmissions(submissions, versions) {
       const container = document.getElementById('submissions-list');
 
       if (!submissions || submissions.length === 0) {
@@ -198,36 +210,180 @@
         return;
       }
 
+      const versionsBySubmission = {};
+      (versions || []).forEach(v => {
+        if (!versionsBySubmission[v.submission_id]) versionsBySubmission[v.submission_id] = [];
+        versionsBySubmission[v.submission_id].push(v);
+      });
+
       submissions.forEach(s => {
-        const card = document.createElement('div');
-        card.className = 'submission-card';
+        // The submissions row is version 1; edits are appended after it.
+        const history = [
+          { version: 1, question_text: s.question_text, answer_aspects: s.answer_aspects, created_at: s.created_at },
+          ...(versionsBySubmission[s.id] || [])
+        ].sort((a, b) => a.version - b.version);
+
+        container.appendChild(buildSubmissionCard(s, history));
+      });
+    }
+
+    function buildSubmissionCard(submission, history) {
+      const card = document.createElement('div');
+      card.className = 'submission-card';
+      // Newest version is what the dashboard leads with.
+      let shown = history[history.length - 1].version;
+
+      function render() {
+        card.innerHTML = '';
+        const current = history.find(v => v.version === shown) || history[history.length - 1];
+        const isLatest = current.version === history[history.length - 1].version;
 
         const question = document.createElement('p');
         question.className = 'submission-question';
-        question.textContent = s.question_text;
+        question.textContent = current.question_text;
         card.appendChild(question);
 
         const meta = document.createElement('div');
         meta.className = 'submission-meta';
+
         const length = document.createElement('span');
         length.className = 'submission-chip';
-        length.textContent = s.preferred_length === 'short' ? 'Short answer' : 'Long answer';
+        length.textContent = submission.preferred_length === 'short' ? 'Short answer' : 'Long answer';
         meta.appendChild(length);
+
+        if (history.length > 1) {
+          const picker = document.createElement('select');
+          picker.className = 'version-select';
+          history.slice().reverse().forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.version;
+            const when = v.created_at ? new Date(v.created_at).toLocaleDateString() : '';
+            opt.textContent = (v.version === 1 ? 'Original' : 'Version ' + v.version) + (when ? ' — ' + when : '');
+            if (v.version === shown) opt.selected = true;
+            picker.appendChild(opt);
+          });
+          picker.addEventListener('change', () => {
+            shown = parseInt(picker.value, 10);
+            render();
+          });
+          meta.appendChild(picker);
+        }
+
+        // Editing always continues from the newest version, never from an older
+        // one being viewed, so a revision can't silently undo a later edit.
+        if (reviewerId && isLatest) {
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'link-btn';
+          editBtn.textContent = 'Edit';
+          editBtn.addEventListener('click', () => renderEditor(current));
+          meta.appendChild(editBtn);
+        }
+
         card.appendChild(meta);
 
-        if (s.answer_aspects && s.answer_aspects.trim()) {
+        if (current.answer_aspects && current.answer_aspects.trim()) {
           const topicsLabel = document.createElement('div');
           topicsLabel.className = 'sub-heading';
           topicsLabel.textContent = 'Topics the answer should cover';
           const topics = document.createElement('p');
           topics.className = 'submission-topics';
-          topics.textContent = s.answer_aspects.trim();
+          topics.textContent = current.answer_aspects.trim();
           card.appendChild(topicsLabel);
           card.appendChild(topics);
         }
+      }
 
-        container.appendChild(card);
-      });
+      function renderEditor(base) {
+        card.innerHTML = '';
+
+        const qLabel = document.createElement('div');
+        qLabel.className = 'sub-heading';
+        qLabel.textContent = 'Question';
+        const qInput = document.createElement('textarea');
+        qInput.className = 'submission-input';
+        qInput.value = base.question_text;
+
+        const tLabel = document.createElement('div');
+        tLabel.className = 'sub-heading';
+        tLabel.textContent = 'Topics the answer should cover';
+        const tInput = document.createElement('textarea');
+        tInput.className = 'submission-input';
+        tInput.value = base.answer_aspects || '';
+
+        const error = document.createElement('p');
+        error.className = 'submission-error';
+        error.style.display = 'none';
+
+        const actions = document.createElement('div');
+        actions.className = 'submission-actions';
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'btn btn-small';
+        save.textContent = 'Save changes';
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'link-btn';
+        cancel.textContent = 'Cancel';
+        actions.appendChild(save);
+        actions.appendChild(cancel);
+
+        cancel.addEventListener('click', render);
+
+        save.addEventListener('click', async () => {
+          const questionText = qInput.value.trim();
+          if (!questionText) {
+            error.textContent = 'The question cannot be empty.';
+            error.style.display = 'block';
+            return;
+          }
+
+          const aspects = tInput.value.trim();
+          if (questionText === base.question_text && aspects === (base.answer_aspects || '').trim()) {
+            render();
+            return;
+          }
+
+          save.disabled = true;
+          error.style.display = 'none';
+
+          const nextVersion = history[history.length - 1].version + 1;
+          const { data, error: saveError } = await supabase
+            .from('submission_versions')
+            .insert([{
+              submission_id: submission.id,
+              version: nextVersion,
+              question_text: questionText,
+              answer_aspects: aspects,
+              edited_by: reviewerId
+            }])
+            .select('submission_id, version, question_text, answer_aspects, created_at')
+            .single();
+
+          if (saveError) {
+            save.disabled = false;
+            error.textContent = saveError.code === '23505'
+              ? 'Someone else edited this question just now. Reload to see their version.'
+              : 'Could not save the changes. Please try again.';
+            error.style.display = 'block';
+            return;
+          }
+
+          history.push(data);
+          shown = data.version;
+          render();
+        });
+
+        card.appendChild(qLabel);
+        card.appendChild(qInput);
+        card.appendChild(tLabel);
+        card.appendChild(tInput);
+        card.appendChild(error);
+        card.appendChild(actions);
+      }
+
+      render();
+      return card;
     }
 
     function renderOverview(gradings, prefVotes, questions, criteria) {
