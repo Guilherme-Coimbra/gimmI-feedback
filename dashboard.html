@@ -120,13 +120,14 @@
       }
 
       const scoreValues = [5, 3, 1];
-      const labels = scoreValues.map(v => 'Score ' + v);
-      const datasets = criteria.map(c => {
-        const counts = scoreValues.map(score => {
+      const labels = criteria.map(c => c.name);
+
+      const datasets = scoreValues.map(score => {
+        const counts = criteria.map(c => {
           return gradings.filter(g => (g.scores && g.scores[c.id]) === score).length;
         });
         return {
-          label: c.name,
+          label: 'Score ' + score,
           data: counts,
           borderWidth: 1
         };
@@ -139,7 +140,10 @@
         options: {
           responsive: true,
           plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            x: { ticks: { maxRotation: 0, autoSkip: false } }
+          }
         }
       });
     }
