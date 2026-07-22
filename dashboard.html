@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Dashboard — GimmI Feedback</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav"><a href="index.html">← Back to home</a></nav>
+
+    <h1 class="page-title">Feedback Dashboard</h1>
+    <p class="page-subtitle">Overview of all gradings and preference votes.</p>
+
+    <!-- Overview stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-number" id="stat-gradings">—</div><div class="stat-label">Total Gradings</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-preferences">—</div><div class="stat-label">Total Preference Votes</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-questions">—</div><div class="stat-label">Questions Evaluated</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-graders">—</div><div class="stat-label">Unique Graders</div></div>
+    </div>
+
+    <!-- Gradings Global -->
+    <section class="dashboard-section">
+      <h2>Gradings Overview</h2>
+      <p class="section-desc">Score distribution across all criteria and all answers.</p>
+      <div class="chart-container">
+        <canvas id="gradings-global-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Gradings Detail -->
+    <section class="dashboard-section">
+      <h2>Gradings by Question &amp; Answer</h2>
+      <p class="section-desc">Click a question to expand and see per-criterion breakdowns.</p>
+      <div id="gradings-detail"></div>
+    </section>
+
+    <!-- Preferences Global -->
+    <section class="dashboard-section">
+      <h2>Preferences Overview</h2>
+      <p class="section-desc">How often each model was ranked 1st, 2nd, 3rd, or 4th across all bracket tournaments.</p>
+      <div class="chart-container">
+        <canvas id="preferences-global-chart"></canvas>
+      </div>
+
+      <h3 style="margin-top: 2rem;">Transition Matrix</h3>
+      <p class="section-desc">When a model is ranked 1st, how often is each other model ranked 2nd?</p>
+      <div id="transition-matrix"></div>
+    </section>
+
+    <!-- Preferences Detail -->
+    <section class="dashboard-section">
+      <h2>Preferences by Question</h2>
+      <p class="section-desc">Click a question to expand and see answer rankings and model performance.</p>
+      <div id="preferences-detail"></div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hqbgbqhajargsgvyryrk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxYmdicWhhamFyZ3NndnlyeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NDAxMzQsImV4cCI6MjEwMDIxNjEzNH0.7F42Rtp2OiEEZKBN2XJXJhCOCX9WmIUlUVBxv9qkT5s';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let charts = {};
+
+    async function init() {
+      const [
+        { data: questions, error: qErr },
+        { data: answers, error: aErr },
+        { data: gradeItems, error: giErr },
+        { data: criteria, error: cErr },
+        { data: options, error: oErr },
+        { data: gradings, error: gErr },
+        { data: prefVotes, error: pErr }
+      ] = await Promise.all([
+        supabase.from('questions').select('*'),
+        supabase.from('answers').select('*'),
+        supabase.from('grade_items').select('*'),
+        supabase.from('grading_criteria').select('*').order('sort_order', { ascending: true }),
+        supabase.from('grade_options').select('*'),
+        supabase.from('gradings').select('*'),
+        supabase.from('preference_votes').select('*')
+      ]);
+
+      if (qErr || aErr || giErr || cErr || oErr || gErr || pErr) {
+        console.error(qErr, aErr, giErr, cErr, oErr, gErr, pErr);
+        document.body.innerHTML += '<p style="color:#c62828;text-align:center;margin-top:2rem;">Error loading dashboard data.</p>';
+        return;
+      }
+
+      renderOverview(gradings, prefVotes, questions, criteria);
+      renderGradingsGlobal(gradings, criteria, options);
+      renderGradingsDetail(gradings, gradeItems, criteria, options);
+      renderPreferencesGlobal(prefVotes, answers, questions);
+      renderPreferencesDetail(prefVotes, answers, questions);
+    }
+
+    function renderOverview(gradings, prefVotes, questions, criteria) {
+      const totalGradings = (gradings || []).length;
+      const totalPrefs = (prefVotes || []).length;
+      const evaluatedQuestions = new Set((prefVotes || []).map(v => v.external_qid)).size;
+      const uniqueGraders = new Set((gradings || []).map(g => g.grader_id)).size;
+
+      document.getElementById('stat-gradings').textContent = totalGradings;
+      document.getElementById('stat-preferences').textContent = totalPrefs;
+      document.getElementById('stat-questions').textContent = evaluatedQuestions;
+      document.getElementById('stat-graders').textContent = uniqueGraders;
+    }
+
+    function renderGradingsGlobal(gradings, criteria, options) {
+      if (!gradings || gradings.length === 0 || !criteria || criteria.length === 0) {
+        document.getElementById('gradings-global-chart').parentElement.innerHTML = '<p style="color:var(--muted-color);text-align:center;padding:2rem;">No grading data yet.</p>';
+        return;
+      }
+
+      const scoreValues = [5, 3, 1];
+      const labels = scoreValues.map(v => 'Score ' + v);
+      const datasets = criteria.map(c => {
+        const counts = scoreValues.map(score => {
+          return gradings.filter(g => (g.scores && g.scores[c.id]) === score).length;
+        });
+        return {
+          label: c.name,
+          data: counts,
+          borderWidth: 1
+        };
+      });
+
+      const ctx = document.getElementById('gradings-global-chart').getContext('2d');
+      charts.gradingsGlobal = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+
+    function renderGradingsDetail(gradings, gradeItems, criteria, options) {
+      const container = document.getElementById('gradings-detail');
+      if (!gradeItems || gradeItems.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted-color);">No grade items available.</p>';
+        return;
+      }
+
+      const gradingsByItem = {};
+      (gradings || []).forEach(g => {
+        if (!gradingsByItem[g.grade_item_id]) gradingsByItem[g.grade_item_id] = [];
+        gradingsByItem[g.grade_item_id].push(g);
+      });
+
+      const scoreValues = [5, 3, 1];
+      const scoreLabels = { 5: '5', 3: '3', 1: '1' };
+
+      gradeItems.forEach(item => {
+        const itemGradings = gradingsByItem[item.id] || [];
+        const count = itemGradings.length;
+
+        const accordion = document.createElement('div');
+        accordion.className = 'accordion-item';
+
+        const header = document.createElement('button');
+        header.className = 'accordion-header';
+        header.innerHTML = `<span>${item.question_text.substring(0, 80)}${item.question_text.length > 80 ? '...' : ''}</span><span class="accordion-meta">${count} grader${count !== 1 ? 's' : ''}</span>`;
+        header.type = 'button';
+
+        const body = document.createElement('div');
+        body.className = 'accordion-body';
+        body.style.display = 'none';
+
+        const answerBox = document.createElement('div');
+        answerBox.className = 'answer-display';
+        answerBox.innerHTML = `<strong>Answer:</strong><p style="margin-top:0.5rem;">${item.answer_text}</p>`;
+        body.appendChild(answerBox);
+
+        if (count === 0) {
+          body.innerHTML += '<p style="color:var(--muted-color);margin-top:1rem;">Not graded yet.</p>';
+        } else {
+          criteria.forEach(c => {
+            const scores = itemGradings.map(g => (g.scores && g.scores[c.id]) ? g.scores[c.id] : null).filter(v => v !== null);
+            const counts = {};
+            scoreValues.forEach(v => counts[v] = 0);
+            scores.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
+
+            const card = document.createElement('div');
+            card.className = 'criteria-card';
+            card.style.marginBottom = '1rem';
+            card.innerHTML = `
+              <div class="criteria-header">
+                <div class="criteria-name">${c.name}</div>
+                <div class="criteria-desc">${c.description}</div>
+              </div>
+              <div class="mini-histogram">
+                ${scoreValues.map(v => `
+                  <div class="hist-bar">
+                    <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%"></div>
+                    <div class="hist-label">${v}</div>
+                    <div class="hist-count">${counts[v]}</div>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+            body.appendChild(card);
+          });
+        }
+
+        header.addEventListener('click', () => {
+          const isOpen = body.style.display === 'block';
+          body.style.display = isOpen ? 'none' : 'block';
+          header.classList.toggle('open', !isOpen);
+        });
+
+        accordion.appendChild(header);
+        accordion.appendChild(body);
+        container.appendChild(accordion);
+      });
+    }
+
+    function computeRankingsFromVotes(votes, answers) {
+      // Group votes by voter + question
+      const byVoterQid = {};
+      (votes || []).forEach(v => {
+        const key = v.voter_id + '_' + v.external_qid;
+        if (!byVoterQid[key]) byVoterQid[key] = [];
+        byVoterQid[key].push(v);
+      });
+
+      const rankings = []; // { external_qid, voter_id, ranks: [{label, rank, model}] }
+
+      Object.entries(byVoterQid).forEach(([key, voterVotes]) => {
+        const [voterId, externalQid] = key.split('_');
+        const ansList = answers.filter(a => a.external_qid === externalQid);
+        const n = ansList.length;
+
+        if (n <= 4) {
+          // Bracket: reconstruct from rounds
+          const matchResults = {};
+          voterVotes.forEach(v => {
+            matchResults[v.round_number + '_' + v.match_in_round] = {
+              winner: v.winner_label,
+              loser: v.winner_label === v.answer_a_label ? v.answer_b_label : v.answer_a_label
+            };
+          });
+
+          if (n === 2) {
+            const r1 = matchResults['1_1'];
+            if (r1) {
+              rankings.push({
+                external_qid: externalQid,
+                voter_id: voterId,
+                ranks: [
+                  { label: r1.winner, rank: 1, model: ansList.find(a => a.label === r1.winner)?.metadata?.model || r1.winner },
+                  { label: r1.loser, rank: 2, model: ansList.find(a => a.label === r1.loser)?.metadata?.model || r1.loser }
+                ]
+              });
+            }
+          } else if (n === 3) {
+            const r1 = matchResults['1_1'];
+            const r2 = matchResults['2_1'];
+            if (r1 && r2) {
+              const loserR1 = r1.loser;
+              rankings.push({
+                external_qid: externalQid,
+                voter_id: voterId,
+                ranks: [
+                  { label: r2.winner, rank: 1, model: ansList.find(a => a.label === r2.winner)?.metadata?.model || r2.winner },
+                  { label: r2.loser, rank: 2, model: ansList.find(a => a.label === r2.loser)?.metadata?.model || r2.loser },
+                  { label: loserR1, rank: 3, model: ansList.find(a => a.label === loserR1)?.metadata?.model || loserR1 }
+                ]
+              });
+            }
+          } else if (n === 4) {
+            const r1m1 = matchResults['1_1'];
+            const r1m2 = matchResults['1_2'];
+            const r2m1 = matchResults['2_1'];
+            const r3m1 = matchResults['3_1'];
+            if (r1m1 && r1m2 && r2m1 && r3m1) {
+              rankings.push({
+                external_qid: externalQid,
+                voter_id: voterId,
+                ranks: [
+                  { label: r2m1.winner, rank: 1, model: ansList.find(a => a.label === r2m1.winner)?.metadata?.model || r2m1.winner },
+                  { label: r2m1.loser, rank: 2, model: ansList.find(a => a.label === r2m1.loser)?.metadata?.model || r2m1.loser },
+                  { label: r3m1.winner, rank: 3, model: ansList.find(a => a.label === r3m1.winner)?.metadata?.model || r3m1.winner },
+                  { label: r3m1.loser, rank: 4, model: ansList.find(a => a.label === r3m1.loser)?.metadata?.model || r3m1.loser }
+                ]
+              });
+            }
+          }
+        } else {
+          // Round-robin: count wins
+          const winCounts = {};
+          ansList.forEach(a => winCounts[a.label] = 0);
+          voterVotes.forEach(v => {
+            winCounts[v.winner_label] = (winCounts[v.winner_label] || 0) + 1;
+          });
+
+          const sorted = ansList
+            .map(a => ({ ...a, wins: winCounts[a.label] || 0 }))
+            .sort((a, b) => b.wins - a.wins);
+
+          const ranks = sorted.map((a, i) => ({
+            label: a.label,
+            rank: i + 1,
+            model: a.metadata?.model || a.label
+          }));
+
+          rankings.push({
+            external_qid: externalQid,
+            voter_id: voterId,
+            ranks: ranks
+          });
+        }
+      });
+
+      return rankings;
+    }
+
+    function renderPreferencesGlobal(prefVotes, answers, questions) {
+      const rankings = computeRankingsFromVotes(prefVotes, answers);
+
+      if (rankings.length === 0) {
+        document.getElementById('preferences-global-chart').parentElement.innerHTML = '<p style="color:var(--muted-color);text-align:center;padding:2rem;">No preference data yet.</p>';
+        document.getElementById('transition-matrix').innerHTML = '<p style="color:var(--muted-color);">No preference data yet.</p>';
+        return;
+      }
+
+      // Filter out questions where any answer lacks a model name
+      const validRankings = rankings.filter(r => {
+        return r.ranks.every(rank => rank.model && rank.model !== rank.label);
+      });
+
+      if (validRankings.length === 0) {
+        document.getElementById('preferences-global-chart').parentElement.innerHTML = '<p style="color:var(--muted-color);text-align:center;padding:2rem;">No valid preference data with model names.</p>';
+        document.getElementById('transition-matrix').innerHTML = '<p style="color:var(--muted-color);">No valid preference data with model names.</p>';
+        return;
+      }
+
+      // Stacked bar: models × ranks
+      const models = [...new Set(validRankings.flatMap(r => r.ranks.map(rank => rank.model)))].sort();
+      const maxRank = Math.max(...validRankings.flatMap(r => r.ranks.map(rank => rank.rank)));
+      const rankColors = ['#2e7d32', '#0066cc', '#fbc02d', '#c62828', '#6c757d'];
+
+      const datasets = [];
+      for (let rank = 1; rank <= maxRank; rank++) {
+        const data = models.map(model => {
+          return validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model && rankObj.rank === rank)).length;
+        });
+        datasets.push({
+          label: 'Rank ' + rank,
+          data: data,
+          backgroundColor: rankColors[rank - 1] || '#999'
+        });
+      }
+
+      const ctx = document.getElementById('preferences-global-chart').getContext('2d');
+      charts.preferencesGlobal = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: models, datasets: datasets },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+
+      // Transition matrix: rank1 model → rank2 model
+      const transitions = {};
+      models.forEach(m1 => {
+        transitions[m1] = {};
+        models.forEach(m2 => transitions[m1][m2] = 0);
+      });
+
+      validRankings.forEach(r => {
+        const rank1 = r.ranks.find(rank => rank.rank === 1);
+        const rank2 = r.ranks.find(rank => rank.rank === 2);
+        if (rank1 && rank2 && rank1.model !== rank2.model) {
+          transitions[rank1.model][rank2.model]++;
+        }
+      });
+
+      const matrixContainer = document.getElementById('transition-matrix');
+      let tableHtml = '<table class="matrix-table"><thead><tr><th>1st → 2nd</th>';
+      models.forEach(m => tableHtml += `<th>${m}</th>`);
+      tableHtml += '</tr></thead><tbody>';
+      models.forEach(m1 => {
+        tableHtml += `<tr><th>${m1}</th>`;
+        models.forEach(m2 => {
+          const count = transitions[m1][m2];
+          tableHtml += `<td>${count > 0 ? count : '—'}</td>`;
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table>';
+      matrixContainer.innerHTML = tableHtml;
+    }
+
+    function renderPreferencesDetail(prefVotes, answers, questions) {
+      const container = document.getElementById('preferences-detail');
+      if (!questions || questions.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted-color);">No questions available.</p>';
+        return;
+      }
+
+      const rankings = computeRankingsFromVotes(prefVotes, answers);
+      const rankingsByQid = {};
+      rankings.forEach(r => {
+        if (!rankingsByQid[r.external_qid]) rankingsByQid[r.external_qid] = [];
+        rankingsByQid[r.external_qid].push(r);
+      });
+
+      const votesByQid = {};
+      (prefVotes || []).forEach(v => {
+        if (!votesByQid[v.external_qid]) votesByQid[v.external_qid] = [];
+        votesByQid[v.external_qid].push(v);
+      });
+
+      questions.forEach(q => {
+        const qAnswers = (answers || []).filter(a => a.external_qid === q.external_qid);
+        const qRankings = rankingsByQid[q.external_qid] || [];
+        const qVotes = votesByQid[q.external_qid] || [];
+
+        // Skip if any answer lacks a model name
+        const hasAllModels = qAnswers.every(a => a.metadata && a.metadata.model);
+        if (!hasAllModels) return;
+
+        const accordion = document.createElement('div');
+        accordion.className = 'accordion-item';
+
+        const header = document.createElement('button');
+        header.className = 'accordion-header';
+        header.innerHTML = `<span>${q.question_text.substring(0, 80)}${q.question_text.length > 80 ? '...' : ''}</span><span class="accordion-meta">${qVotes.length} vote${qVotes.length !== 1 ? 's' : ''}</span>`;
+        header.type = 'button';
+
+        const body = document.createElement('div');
+        body.className = 'accordion-body';
+        body.style.display = 'none';
+
+        if (qRankings.length === 0) {
+          body.innerHTML = '<p style="color:var(--muted-color);margin-top:1rem;">No completed rankings yet.</p>';
+        } else {
+          // Aggregate ranks per model
+          const modelRankCounts = {};
+          qAnswers.forEach(a => {
+            modelRankCounts[a.metadata.model] = { 1: 0, 2: 0, 3: 0, 4: 0 };
+          });
+
+          qRankings.forEach(r => {
+            r.ranks.forEach(rank => {
+              if (modelRankCounts[rank.model]) {
+                modelRankCounts[rank.model][rank.rank] = (modelRankCounts[rank.model][rank.rank] || 0) + 1;
+              }
+            });
+          });
+
+          const table = document.createElement('table');
+          table.className = 'detail-table';
+          table.innerHTML = `
+            <thead><tr><th>Model</th><th>Answer</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th></tr></thead>
+            <tbody>
+              ${qAnswers.map(a => {
+                const counts = modelRankCounts[a.metadata.model] || {};
+                return `<tr>
+                  <td>${a.metadata.model}</td>
+                  <td>${a.label}</td>
+                  <td>${counts[1] || 0}</td>
+                  <td>${counts[2] || 0}</td>
+                  <td>${counts[3] || 0}</td>
+                  <td>${counts[4] || 0}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          `;
+          body.appendChild(table);
+        }
+
+        header.addEventListener('click', () => {
+          const isOpen = body.style.display === 'block';
+          body.style.display = isOpen ? 'none' : 'block';
+          header.classList.toggle('open', !isOpen);
+        });
+
+        accordion.appendChild(header);
+        accordion.appendChild(body);
+        container.appendChild(accordion);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
