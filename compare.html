@@ -45,7 +45,7 @@
       window.location.href = 'index.html';
     }
 
-    let currentPair = null;
+    let currentMatch = null;
 
     function shuffleArray(array) {
       const arr = array.slice();
@@ -54,6 +54,52 @@
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
       return arr;
+    }
+
+    function getBracketKey(externalQid) {
+      return 'bracket_' + voterId + '_' + externalQid;
+    }
+
+    function getBracketOrder(externalQid, labels) {
+      const key = getBracketKey(externalQid);
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      const shuffled = shuffleArray(labels);
+      localStorage.setItem(key, JSON.stringify(shuffled));
+      return shuffled;
+    }
+
+    function buildBracketMatches(order) {
+      const n = order.length;
+      const matches = [];
+      if (n === 2) {
+        matches.push({ round: 1, match: 1, a: order[0], b: order[1] });
+      } else if (n === 3) {
+        matches.push({ round: 1, match: 1, a: order[0], b: order[1] });
+        matches.push({ round: 2, match: 1, a: 'winner_r1m1', b: order[2] });
+      } else if (n === 4) {
+        matches.push({ round: 1, match: 1, a: order[0], b: order[1] });
+        matches.push({ round: 1, match: 2, a: order[2], b: order[3] });
+        matches.push({ round: 2, match: 1, a: 'winner_r1m1', b: 'winner_r1m2' });
+        matches.push({ round: 3, match: 1, a: 'loser_r1m1', b: 'loser_r1m2' });
+      }
+      return matches;
+    }
+
+    function resolveSlot(slot, matchResults) {
+      if (!slot.startsWith('winner_') && !slot.startsWith('loser_')) {
+        return slot;
+      }
+      const parts = slot.split('_');
+      const result = parts[0]; // winner or loser
+      const round = parseInt(parts[1].replace('r', ''));
+      const match = parseInt(parts[2].replace('m', ''));
+      const key = round + '_' + match;
+      const mr = matchResults[key];
+      if (!mr) return null;
+      return result === 'winner' ? mr.winner : mr.loser;
     }
 
     function getAllPairs(labels) {
@@ -75,7 +121,6 @@
       comparisonEl.style.display = 'flex';
       status.style.display = 'none';
 
-      // Fetch everything in parallel
       const [
         { data: questions, error: qError },
         { data: allAnswers, error: aError },
@@ -83,7 +128,7 @@
       ] = await Promise.all([
         supabase.from('questions').select('*'),
         supabase.from('answers').select('*'),
-        supabase.from('votes').select('*').eq('voter_id', voterId)
+        supabase.from('preference_votes').select('*').eq('voter_id', voterId)
       ]);
 
       if (qError || aError || vError) {
@@ -103,7 +148,6 @@
         return;
       }
 
-      // Group answers and votes by external_qid
       const answersByQid = {};
       (allAnswers || []).forEach(a => {
         if (!answersByQid[a.external_qid]) answersByQid[a.external_qid] = [];
@@ -116,57 +160,115 @@
         votesByQid[v.external_qid].push(v);
       });
 
-      // Find the first question with a remaining pair
       for (const question of questions) {
         const answers = answersByQid[question.external_qid];
         if (!answers || answers.length < 2) continue;
 
         const labels = answers.map(a => a.label);
-        const allPairs = getAllPairs(labels);
+        const n = labels.length;
         const votes = votesByQid[question.external_qid] || [];
 
-        // Build a set of already-voted pairs (order-independent)
-        const votedSet = new Set();
-        votes.forEach(v => {
-          const key = [v.option_a_label, v.option_b_label].sort().join('-');
-          votedSet.add(key);
-        });
+        if (n <= 4) {
+          // Bracket mode
+          const order = getBracketOrder(question.external_qid, labels);
+          const bracketMatches = buildBracketMatches(order);
 
-        const remainingPairs = allPairs.filter(pair => {
-          const key = pair.slice().sort().join('-');
-          return !votedSet.has(key);
-        });
+          // Build match results from existing votes
+          const matchResults = {};
+          votes.forEach(v => {
+            const key = v.round_number + '_' + v.match_in_round;
+            matchResults[key] = {
+              winner: v.winner_label,
+              loser: v.winner_label === v.answer_a_label ? v.answer_b_label : v.answer_a_label
+            };
+          });
 
-        if (remainingPairs.length > 0) {
-          // Pick a random remaining pair and shuffle left/right order
-          const pair = remainingPairs[Math.floor(Math.random() * remainingPairs.length)];
-          if (Math.random() > 0.5) pair.reverse();
+          // Find the first unresolved match
+          let nextMatch = null;
+          for (const m of bracketMatches) {
+            const key = m.round + '_' + m.match;
+            if (matchResults[key]) continue;
 
-          const ansA = answers.find(a => a.label === pair[0]);
-          const ansB = answers.find(a => a.label === pair[1]);
+            const aLabel = resolveSlot(m.a, matchResults);
+            const bLabel = resolveSlot(m.b, matchResults);
 
-          currentPair = {
-            question: question,
-            optionA: ansA,
-            optionB: ansB
-          };
+            if (aLabel && bLabel) {
+              nextMatch = {
+                question: question,
+                round: m.round,
+                match: m.match,
+                aLabel: aLabel,
+                bLabel: bLabel
+              };
+              break;
+            }
+          }
 
-          questionEl.textContent = '"' + question.question_text + '"';
+          if (nextMatch) {
+            const ansA = answers.find(a => a.label === nextMatch.aLabel);
+            const ansB = answers.find(a => a.label === nextMatch.bLabel);
 
-          document.getElementById('label-a').textContent = 'Answer ' + ansA.label;
-          document.getElementById('answer-a').textContent = ansA.answer_text;
+            currentMatch = {
+              question: question,
+              round: nextMatch.round,
+              match: nextMatch.match,
+              optionA: ansA,
+              optionB: ansB
+            };
 
-          document.getElementById('label-b').textContent = 'Answer ' + ansB.label;
-          document.getElementById('answer-b').textContent = ansB.answer_text;
+            questionEl.textContent = '"' + question.question_text + '"';
+            document.getElementById('label-a').textContent = 'Answer ' + ansA.label;
+            document.getElementById('answer-a').textContent = ansA.answer_text;
+            document.getElementById('label-b').textContent = 'Answer ' + ansB.label;
+            document.getElementById('answer-b').textContent = ansB.answer_text;
+            document.getElementById('btn-a').onclick = () => castVote(ansA.label);
+            document.getElementById('btn-b').onclick = () => castVote(ansB.label);
 
-          document.getElementById('btn-a').onclick = () => castVote(ansA.label);
-          document.getElementById('btn-b').onclick = () => castVote(ansB.label);
+            return;
+          }
+        } else {
+          // Round-robin fallback for 5 answers
+          const allPairs = getAllPairs(labels);
+          const votedSet = new Set();
+          votes.forEach(v => {
+            const key = [v.answer_a_label, v.answer_b_label].sort().join('-');
+            votedSet.add(key);
+          });
 
-          return;
+          const remainingPairs = allPairs.filter(pair => {
+            const key = pair.slice().sort().join('-');
+            return !votedSet.has(key);
+          });
+
+          if (remainingPairs.length > 0) {
+            const pair = remainingPairs[Math.floor(Math.random() * remainingPairs.length)];
+            if (Math.random() > 0.5) pair.reverse();
+
+            const ansA = answers.find(a => a.label === pair[0]);
+            const ansB = answers.find(a => a.label === pair[1]);
+
+            currentMatch = {
+              question: question,
+              round: 0,
+              match: 0,
+              optionA: ansA,
+              optionB: ansB
+            };
+
+            questionEl.textContent = '"' + question.question_text + '"';
+            document.getElementById('label-a').textContent = 'Answer ' + ansA.label;
+            document.getElementById('answer-a').textContent = ansA.answer_text;
+            document.getElementById('label-b').textContent = 'Answer ' + ansB.label;
+            document.getElementById('answer-b').textContent = ansB.answer_text;
+            document.getElementById('btn-a').onclick = () => castVote(ansA.label);
+            document.getElementById('btn-b').onclick = () => castVote(ansB.label);
+
+            return;
+          }
         }
       }
 
-      // No remaining pairs across all questions
+      // No remaining matches across all questions
       questionEl.style.display = 'none';
       comparisonEl.style.display = 'none';
       status.textContent = 'Great job! You have reviewed all available questions.';
@@ -175,15 +277,17 @@
     }
 
     async function castVote(winnerLabel) {
-      if (!currentPair) return;
+      if (!currentMatch) return;
 
       const { error } = await supabase
-        .from('votes')
+        .from('preference_votes')
         .insert([{
-          external_qid: currentPair.question.external_qid,
+          external_qid: currentMatch.question.external_qid,
           voter_id: voterId,
-          option_a_label: currentPair.optionA.label,
-          option_b_label: currentPair.optionB.label,
+          round_number: currentMatch.round,
+          match_in_round: currentMatch.match,
+          answer_a_label: currentMatch.optionA.label,
+          answer_b_label: currentMatch.optionB.label,
           winner_label: winnerLabel
         }]);
 
