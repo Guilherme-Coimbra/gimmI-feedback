@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Submit a Question — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <div class="container">
@@ -70,11 +71,11 @@
       if (error) {
         console.error(error);
         status.textContent = 'Something went wrong. Please try again.';
-        status.style.color = '#c62828';
+        status.style.color = 'var(--danger-color)';
         status.style.display = 'block';
       } else {
         status.textContent = 'Thanks! Your question has been saved.';
-        status.style.color = '#2e7d32';
+        status.style.color = 'var(--ok-color)';
         status.style.display = 'block';
         form.reset();
       }

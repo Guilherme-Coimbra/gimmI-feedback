@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Compare Answers — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
   <script src="answer-format.js"></script>
 </head>
 <body>
@@ -135,7 +136,7 @@
       if (qError || aError || vError) {
         console.error(qError, aError, vError);
         status.textContent = 'Error loading data. Please refresh.';
-        status.style.color = '#c62828';
+        status.style.color = 'var(--danger-color)';
         status.style.display = 'block';
         return;
       }
@@ -273,7 +274,7 @@
       questionEl.style.display = 'none';
       comparisonEl.style.display = 'none';
       status.textContent = 'Great job! You have reviewed all available questions.';
-      status.style.color = '#2e7d32';
+      status.style.color = 'var(--ok-color)';
       status.style.display = 'block';
     }
 
@@ -297,11 +298,11 @@
       if (error) {
         console.error(error);
         status.textContent = 'Error saving vote. Please try again.';
-        status.style.color = '#c62828';
+        status.style.color = 'var(--danger-color)';
         status.style.display = 'block';
       } else {
         status.textContent = 'Vote saved! Loading next comparison...';
-        status.style.color = '#2e7d32';
+        status.style.color = 'var(--ok-color)';
         status.style.display = 'block';
         setTimeout(loadNextPair, 800);
       }

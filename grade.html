@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grade Answers — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
   <script src="answer-format.js"></script>
 </head>
 <body>
@@ -70,7 +71,7 @@
       if (cErr || oErr || iErr || gErr) {
         console.error(cErr, oErr, iErr, gErr);
         status.textContent = 'Error loading data. Please refresh.';
-        status.style.color = '#c62828';
+        status.style.color = 'var(--danger-color)';
         status.style.display = 'block';
         return;
       }
@@ -103,7 +104,7 @@
       if (!currentItem) {
         card.style.display = 'none';
         status.textContent = 'Great job! You have graded all available answers.';
-        status.style.color = '#2e7d32';
+        status.style.color = 'var(--ok-color)';
         status.style.display = 'block';
         return;
       }
@@ -204,7 +205,7 @@
 
       if (!allSelected) {
         status.textContent = 'Please select a score for all criteria.';
-        status.style.color = '#c62828';
+        status.style.color = 'var(--danger-color)';
         status.style.display = 'block';
         return;
       }
@@ -223,11 +224,11 @@
       if (error) {
         console.error(error);
         status.textContent = 'Error saving grading. Please try again.';
-        status.style.color = '#c62828';
+        status.style.color = 'var(--danger-color)';
         status.style.display = 'block';
       } else {
         status.textContent = 'Grading submitted! Loading next answer...';
-        status.style.color = '#2e7d32';
+        status.style.color = 'var(--ok-color)';
         status.style.display = 'block';
         window.scrollTo(0, 0);
         document.getElementById('grading-form').reset();

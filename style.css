@@ -1,6 +1,37 @@
 /* GimmI Feedback — Main stylesheet */
 
+/* Dark is the default theme; theme.js stamps data-theme="light" to switch. */
 :root {
+  color-scheme: dark;
+  --bg-color: #0d0d0d;
+  --card-bg: #1a1a19;
+  --text-color: #ffffff;
+  --accent-color: #3987e5;
+  --accent-hover: #5598e7;
+  --muted-color: #898781;
+  --border-color: #2c2c2a;
+  --ok-color: #0ca30c;
+  --danger-color: #e66767;
+  --status-bg: #15251a;
+  --table-head-bg: #202020;
+  --row-hover: rgba(57, 135, 229, 0.12);
+  --row-alt: rgba(57, 135, 229, 0.06);
+  --focus-ring: rgba(57, 135, 229, 0.35);
+  --radius: 8px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  /* Chart chrome and the ordinal ramp, stepped for the dark chart surface. */
+  --chart-surface: #1a1a19;
+  --chart-tick: #c3c2b7;
+  --chart-grid: #2c2c2a;
+  --rank-1: #9ec5f4;
+  --rank-2: #5598e7;
+  --rank-3: #2a78d6;
+  --rank-4: #184f95;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
   --bg-color: #f8f9fa;
   --card-bg: #ffffff;
   --text-color: #212529;
@@ -8,8 +39,44 @@
   --accent-hover: #0052a3;
   --muted-color: #6c757d;
   --border-color: #dee2e6;
-  --radius: 8px;
+  --ok-color: #2e7d32;
+  --danger-color: #c62828;
+  --status-bg: #e8f5e9;
+  --table-head-bg: #f1f3f5;
+  --row-hover: rgba(0, 102, 204, 0.08);
+  --row-alt: rgba(0, 102, 204, 0.04);
+  --focus-ring: rgba(0, 102, 204, 0.15);
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  /* Same ramp re-stepped for the light chart surface, darkest at 1st. */
+  --chart-surface: #ffffff;
+  --chart-tick: #52514e;
+  --chart-grid: #e1e0d9;
+  --rank-1: #1c5cab;
+  --rank-2: #2a78d6;
+  --rank-3: #5598e7;
+  --rank-4: #86b6ef;
+}
+
+/* Theme toggle (injected by theme.js) */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-color);
 }
 
 * {
@@ -156,7 +223,7 @@ body.home {
 .form-group select:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 /* Comparison layout */
@@ -208,7 +275,7 @@ body.home {
 #status {
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
-  background: #e8f5e9;
+  background: var(--status-bg);
   font-weight: 500;
 }
 
@@ -265,7 +332,7 @@ body.home {
 
 .grade-option:hover {
   border-color: var(--accent-color);
-  background-color: rgba(0, 102, 204, 0.04);
+  background-color: var(--row-alt);
 }
 
 .grade-option input[type="radio"] {
@@ -275,7 +342,7 @@ body.home {
 
 .grade-option.selected {
   border-color: var(--accent-color);
-  background-color: rgba(0, 102, 204, 0.08);
+  background-color: var(--row-hover);
 }
 
 .grade-option-label {
@@ -355,6 +422,39 @@ body.home {
 .chart-inline {
   height: 280px;
   margin-top: 1rem;
+}
+
+/* Submitted questions */
+.submission-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.submission-question {
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.submission-meta {
+  margin-top: 0.75rem;
+}
+
+.submission-chip {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--muted-color);
+}
+
+.submission-topics {
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 /* Nested answer toggles (preferences detail) */
@@ -526,7 +626,7 @@ body.home {
 
 .matrix-table th,
 .detail-table th {
-  background: #f1f3f5;
+  background: var(--table-head-bg);
   font-weight: 600;
   font-size: 0.9rem;
 }
