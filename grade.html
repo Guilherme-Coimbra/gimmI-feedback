@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grade Answers — GimmI Feedback</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <nav class="nav"><a href="index.html">← Back to home</a></nav>
+
+    <h1 class="page-title">Grade an Answer</h1>
+    <p class="page-subtitle">Read the answer and rate it against each criterion.</p>
+
+    <div id="grading-card" style="display: none;">
+      <div class="question-display" id="question-display"></div>
+      <div class="answer-display" id="answer-display"></div>
+
+      <form id="grading-form">
+        <div id="criteria-container"></div>
+
+        <div class="form-group">
+          <label for="comments">Additional comments <span style="font-weight: normal; color: var(--muted-color);">(optional)</span></label>
+          <textarea id="comments" placeholder="e.g. The answer confused Cas9 PAM requirements..."></textarea>
+        </div>
+
+        <button type="submit" class="btn">Submit grading</button>
+      </form>
+    </div>
+
+    <p id="status" style="margin-top: 1.5rem; display: none;"></p>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hqbgbqhajargsgvyryrk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxYmdicWhhamFyZ3NndnlyeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NDAxMzQsImV4cCI6MjEwMDIxNjEzNH0.7F42Rtp2OiEEZKBN2XJXJhCOCX9WmIUlUVBxv9qkT5s';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const voterId = localStorage.getItem('voter_id');
+    if (!voterId) {
+      window.location.href = 'index.html';
+    }
+
+    let currentItem = null;
+    let criteriaList = [];
+    let optionsByCriteria = {};
+
+    async function init() {
+      const status = document.getElementById('status');
+      const card = document.getElementById('grading-card');
+
+      const [
+        { data: criteria, error: cErr },
+        { data: options, error: oErr },
+        { data: items, error: iErr },
+        { data: existingGradings, error: gErr }
+      ] = await Promise.all([
+        supabase.from('grading_criteria').select('*').order('sort_order', { ascending: true }),
+        supabase.from('grade_options').select('*'),
+        supabase.from('grade_items').select('*'),
+        supabase.from('gradings').select('grade_item_id').eq('grader_id', voterId)
+      ]);
+
+      if (cErr || oErr || iErr || gErr) {
+        console.error(cErr, oErr, iErr, gErr);
+        status.textContent = 'Error loading data. Please refresh.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+        return;
+      }
+
+      if (!items || items.length === 0) {
+        card.style.display = 'none';
+        status.textContent = 'No answers available for grading yet. Check back later!';
+        status.style.color = 'var(--muted-color)';
+        status.style.display = 'block';
+        return;
+      }
+
+      criteriaList = criteria || [];
+
+      optionsByCriteria = {};
+      (options || []).forEach(opt => {
+        if (!optionsByCriteria[opt.criteria_id]) {
+          optionsByCriteria[opt.criteria_id] = [];
+        }
+        optionsByCriteria[opt.criteria_id].push(opt);
+      });
+
+      Object.values(optionsByCriteria).forEach(opts => {
+        opts.sort((a, b) => b.score_value - a.score_value);
+      });
+
+      const gradedIds = new Set((existingGradings || []).map(g => g.grade_item_id));
+      currentItem = items.find(item => !gradedIds.has(item.id));
+
+      if (!currentItem) {
+        card.style.display = 'none';
+        status.textContent = 'Great job! You have graded all available answers.';
+        status.style.color = '#2e7d32';
+        status.style.display = 'block';
+        return;
+      }
+
+      renderForm();
+      card.style.display = 'block';
+      status.style.display = 'none';
+    }
+
+    function renderForm() {
+      document.getElementById('question-display').textContent = '"' + currentItem.question_text + '"';
+      document.getElementById('answer-display').textContent = currentItem.answer_text;
+
+      const container = document.getElementById('criteria-container');
+      container.innerHTML = '';
+
+      criteriaList.forEach(criterion => {
+        const card = document.createElement('div');
+        card.className = 'criteria-card';
+
+        const header = document.createElement('div');
+        header.className = 'criteria-header';
+
+        const name = document.createElement('div');
+        name.className = 'criteria-name';
+        name.textContent = criterion.name;
+
+        const desc = document.createElement('div');
+        desc.className = 'criteria-desc';
+        desc.textContent = criterion.description;
+
+        header.appendChild(name);
+        header.appendChild(desc);
+        card.appendChild(header);
+
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'grade-options';
+
+        const opts = optionsByCriteria[criterion.id] || [];
+        opts.forEach(opt => {
+          const optionDiv = document.createElement('label');
+          optionDiv.className = 'grade-option';
+
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.name = criterion.id;
+          radio.value = opt.score_value;
+          radio.required = true;
+
+          const labelDiv = document.createElement('div');
+          labelDiv.className = 'grade-option-label';
+
+          const scoreSpan = document.createElement('span');
+          scoreSpan.className = 'grade-score';
+          scoreSpan.textContent = opt.score_value;
+
+          const descSpan = document.createElement('span');
+          descSpan.className = 'grade-desc';
+          descSpan.textContent = opt.description;
+
+          labelDiv.appendChild(scoreSpan);
+          labelDiv.appendChild(descSpan);
+
+          optionDiv.appendChild(radio);
+          optionDiv.appendChild(labelDiv);
+
+          radio.addEventListener('change', () => {
+            optionsDiv.querySelectorAll('.grade-option').forEach(el => {
+              el.classList.remove('selected');
+            });
+            optionDiv.classList.add('selected');
+          });
+
+          optionsDiv.appendChild(optionDiv);
+        });
+
+        card.appendChild(optionsDiv);
+        container.appendChild(card);
+      });
+    }
+
+    async function submitGrading(event) {
+      event.preventDefault();
+
+      const scores = {};
+      let allSelected = true;
+
+      criteriaList.forEach(criterion => {
+        const selected = document.querySelector(`input[name="${criterion.id}"]:checked`);
+        if (selected) {
+          scores[criterion.id] = parseInt(selected.value);
+        } else {
+          allSelected = false;
+        }
+      });
+
+      const status = document.getElementById('status');
+
+      if (!allSelected) {
+        status.textContent = 'Please select a score for all criteria.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+        return;
+      }
+
+      const comments = document.getElementById('comments').value.trim();
+
+      const { error } = await supabase
+        .from('gradings')
+        .insert([{
+          grader_id: voterId,
+          grade_item_id: currentItem.id,
+          scores: scores,
+          comments: comments
+        }]);
+
+      if (error) {
+        console.error(error);
+        status.textContent = 'Error saving grading. Please try again.';
+        status.style.color = '#c62828';
+        status.style.display = 'block';
+      } else {
+        status.textContent = 'Grading saved! Loading next answer...';
+        status.style.color = '#2e7d32';
+        status.style.display = 'block';
+        document.getElementById('grading-form').reset();
+        document.querySelectorAll('.grade-option.selected').forEach(el => {
+          el.classList.remove('selected');
+        });
+        setTimeout(init, 800);
+      }
+    }
+
+    document.getElementById('grading-form').addEventListener('submit', submitGrading);
+
+    init();
+  </script>
+</body>
+</html>

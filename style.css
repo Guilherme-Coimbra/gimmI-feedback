@@ -203,6 +203,88 @@ body.home {
   width: 100%;
 }
 
+/* Grading page */
+.answer-display {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.criteria-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.criteria-header {
+  margin-bottom: 1rem;
+}
+
+.criteria-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.criteria-desc {
+  color: var(--muted-color);
+  font-size: 0.95rem;
+}
+
+.grade-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.grade-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.grade-option:hover {
+  border-color: var(--accent-color);
+  background-color: rgba(0, 102, 204, 0.04);
+}
+
+.grade-option input[type="radio"] {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.grade-option.selected {
+  border-color: var(--accent-color);
+  background-color: rgba(0, 102, 204, 0.08);
+}
+
+.grade-option-label {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.grade-score {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.grade-desc {
+  color: var(--muted-color);
+  font-size: 0.9rem;
+  margin-top: 0.1rem;
+}
+
 @media (max-width: 640px) {
   .comparison {
     flex-direction: column;
