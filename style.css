@@ -346,6 +346,78 @@ body.home {
   max-height: 400px;
 }
 
+/* Charts sized by their container (maintainAspectRatio: false) */
+.chart-fixed {
+  height: 400px;
+  max-height: none;
+}
+
+.chart-inline {
+  height: 280px;
+  margin-top: 1rem;
+}
+
+/* Nested answer toggles (preferences detail) */
+.sub-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.answer-toggle-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.answer-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  cursor: pointer;
+  text-align: left;
+}
+
+.answer-toggle::after {
+  content: '+';
+  font-size: 1.1rem;
+  color: var(--muted-color);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.answer-toggle.open::after {
+  content: '−';
+}
+
+.answer-model {
+  font-weight: 600;
+}
+
+.answer-label-chip {
+  font-size: 0.8rem;
+  color: var(--muted-color);
+}
+
+.answer-toggle-body {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--border-color);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
 /* Accordion */
 .accordion-item {
   background: var(--card-bg);
