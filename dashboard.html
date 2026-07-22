@@ -182,7 +182,13 @@
 
         const answerBox = document.createElement('div');
         answerBox.className = 'answer-display';
-        answerBox.innerHTML = `<strong>Answer:</strong><p style="margin-top:0.5rem;">${item.answer_text}</p>`;
+        const answerLabel = document.createElement('strong');
+        answerLabel.textContent = 'Answer:';
+        const answerText = document.createElement('p');
+        answerText.style.marginTop = '0.5rem';
+        answerText.textContent = item.answer_text;
+        answerBox.appendChild(answerLabel);
+        answerBox.appendChild(answerText);
         body.appendChild(answerBox);
 
         if (count === 0) {
@@ -232,7 +238,7 @@
       // Group votes by voter + question
       const byVoterQid = {};
       (votes || []).forEach(v => {
-        const key = v.voter_id + '_' + v.external_qid;
+        const key = JSON.stringify([v.voter_id, v.external_qid]);
         if (!byVoterQid[key]) byVoterQid[key] = [];
         byVoterQid[key].push(v);
       });
@@ -240,7 +246,7 @@
       const rankings = []; // { external_qid, voter_id, ranks: [{label, rank, model}] }
 
       Object.entries(byVoterQid).forEach(([key, voterVotes]) => {
-        const [voterId, externalQid] = key.split('_');
+        const [voterId, externalQid] = JSON.parse(key);
         const ansList = answers.filter(a => a.external_qid === externalQid);
         const n = ansList.length;
 
