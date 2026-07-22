@@ -22,6 +22,7 @@
       <div class="stat-card"><div class="stat-number" id="stat-preferences">—</div><div class="stat-label">Total Preference Votes</div></div>
       <div class="stat-card"><div class="stat-number" id="stat-questions">—</div><div class="stat-label">Questions Evaluated</div></div>
       <div class="stat-card"><div class="stat-number" id="stat-graders">—</div><div class="stat-label">Unique Graders</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-submissions">—</div><div class="stat-label">Submitted Questions</div></div>
     </div>
 
     <!-- Gradings Global -->
@@ -194,7 +195,7 @@
         return;
       }
 
-      renderOverview(gradings, prefVotes, questions, criteria);
+      renderOverview(gradings, prefVotes, questions, criteria, submissions);
       renderGradingsGlobal(gradings, criteria, options);
       renderGradingsDetail(gradings, gradeItems, criteria, options);
       renderPreferencesGlobal(prefVotes, answers, questions);
@@ -386,7 +387,7 @@
       return card;
     }
 
-    function renderOverview(gradings, prefVotes, questions, criteria) {
+    function renderOverview(gradings, prefVotes, questions, criteria, submissions) {
       const totalGradings = (gradings || []).length;
       const totalPrefs = (prefVotes || []).length;
       const evaluatedQuestions = new Set((prefVotes || []).map(v => v.external_qid)).size;
@@ -396,6 +397,7 @@
       document.getElementById('stat-preferences').textContent = totalPrefs;
       document.getElementById('stat-questions').textContent = evaluatedQuestions;
       document.getElementById('stat-graders').textContent = uniqueGraders;
+      document.getElementById('stat-submissions').textContent = (submissions || []).length;
     }
 
     function renderGradingsGlobal(gradings, criteria, options) {
