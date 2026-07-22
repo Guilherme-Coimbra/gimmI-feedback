@@ -244,7 +244,11 @@
         const ansList = answers.filter(a => a.external_qid === externalQid);
         const n = ansList.length;
 
-        if (n <= 4) {
+        // Check if votes are bracket-style or round-robin
+        const allRoundZero = voterVotes.every(v => v.round_number === 0 && v.match_in_round === 0);
+        const isBracket = !allRoundZero && n <= 4;
+
+        if (isBracket) {
           // Bracket: reconstruct from rounds
           const matchResults = {};
           voterVotes.forEach(v => {
@@ -300,7 +304,7 @@
             }
           }
         } else {
-          // Round-robin: count wins
+          // Round-robin (or fallback): count wins
           const winCounts = {};
           ansList.forEach(a => winCounts[a.label] = 0);
           voterVotes.forEach(v => {
@@ -311,7 +315,19 @@
             .map(a => ({ ...a, wins: winCounts[a.label] || 0 }))
             .sort((a, b) => b.wins - a.wins);
 
-          const ranks = sorted.map((a, i) => ({
+          // Handle ties deterministically: sort by label alphabetically
+          const grouped = {};
+          sorted.forEach(a => {
+            if (!grouped[a.wins]) grouped[a.wins] = [];
+            grouped[a.wins].push(a);
+          });
+          const flat = [];
+          Object.keys(grouped).sort((a, b) => b - a).forEach(wins => {
+            grouped[wins].sort((a, b) => a.label.localeCompare(b.label));
+            flat.push(...grouped[wins]);
+          });
+
+          const ranks = flat.map((a, i) => ({
             label: a.label,
             rank: i + 1,
             model: a.metadata?.model || a.label
