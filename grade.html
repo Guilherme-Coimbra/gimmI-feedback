@@ -13,6 +13,8 @@
     <h1 class="page-title">Grade an Answer</h1>
     <p class="page-subtitle">Read the answer and rate it against each criterion.</p>
 
+    <p id="status" style="margin-bottom: 1.5rem; display: none;"></p>
+
     <div id="grading-card" style="display: none;">
       <div class="question-display" id="question-display"></div>
       <div class="answer-display" id="answer-display"></div>
@@ -29,7 +31,6 @@
       </form>
     </div>
 
-    <p id="status" style="margin-top: 1.5rem; display: none;"></p>
   </div>
 
   <script type="module">
@@ -224,7 +225,7 @@
         status.style.color = '#c62828';
         status.style.display = 'block';
       } else {
-        status.textContent = 'Grading saved! Loading next answer...';
+        status.textContent = 'Grading submitted! Loading next answer...';
         status.style.color = '#2e7d32';
         status.style.display = 'block';
         document.getElementById('grading-form').reset();
