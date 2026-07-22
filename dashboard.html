@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feedback Dashboard — GimmI Feedback</title>
   <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
   <script src="answer-format.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
@@ -27,7 +28,7 @@
     <section class="dashboard-section">
       <h2>Gradings Overview</h2>
       <p class="section-desc">Score distribution across all criteria and all answers.</p>
-      <div class="chart-container">
+      <div class="chart-container chart-fixed">
         <canvas id="gradings-global-chart"></canvas>
       </div>
     </section>
@@ -58,6 +59,13 @@
       <p class="section-desc">Click a question to see how often each model took each preference position, and expand any answer to read it.</p>
       <div id="preferences-detail"></div>
     </section>
+
+    <!-- Submitted questions -->
+    <section class="dashboard-section">
+      <h2>Submitted Questions</h2>
+      <p class="section-desc">Questions suggested through the submission form, with the preferred answer length and the topics each answer should cover. Submitters are not identified.</p>
+      <div id="submissions-list"></div>
+    </section>
   </div>
 
   <script type="module">
@@ -68,23 +76,25 @@
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let charts = {};
+    // Both preference position (1st..4th) and grading score (5/3/1) are ordinal
+    // scales, so both use one single-hue ramp with the best value darkest —
+    // never a hue per level. The steps live in style.css so each theme carries
+    // its own set, validated against that theme's chart surface.
+    const allCharts = [];
+    const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const rampColor = level => cssVar('--rank-' + level) || cssVar('--rank-4');
 
-    // Preference rank is an ordinal scale (1st is better than 3rd), so it gets a
-    // single-hue ramp, darkest at 1st — not one hue per rank. Validated for
-    // monotone lightness, step gaps and surface contrast against #ffffff.
-    const PREF_COLORS = ['#1c5cab', '#2a78d6', '#5598e7', '#86b6ef'];
     const ORDINALS = ['1st', '2nd', '3rd', '4th'];
     const prefLabel = n => (ORDINALS[n - 1] || n + 'th') + ' Preference';
 
     // 2px surface-coloured gap between stacked segments; only the topmost
     // segment rounds, so the stack stays anchored to the baseline.
-    function prefDataset(rank, data, isTop) {
+    function rampDataset(label, level, data, isTop) {
       return {
-        label: prefLabel(rank),
+        label: label,
         data: data,
-        backgroundColor: PREF_COLORS[rank - 1] || PREF_COLORS[PREF_COLORS.length - 1],
-        borderColor: '#ffffff',
+        backgroundColor: rampColor(level),
+        borderColor: cssVar('--chart-surface'),
         borderWidth: 2,
         borderRadius: isTop ? { topLeft: 4, topRight: 4 } : 0,
         borderSkipped: false,
@@ -92,23 +102,55 @@
       };
     }
 
-    const prefChartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'top', labels: { boxWidth: 12, boxHeight: 12, usePointStyle: false } },
-        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } }
-      },
-      scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: '#52514e' } },
-        y: {
-          stacked: true, beginAtZero: true,
-          ticks: { stepSize: 1, color: '#898781' },
-          grid: { color: '#e1e0d9' },
-          border: { display: false }
+    const prefDataset = (rank, data, isTop) => rampDataset(prefLabel(rank), rank, data, isTop);
+
+    // Colours are read as callbacks so a theme switch is picked up on update().
+    // Preference counts stack (they total one vote per voter); grading scores
+    // stay grouped, as they did before.
+    function chartOptions(stacked) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, boxHeight: 12, color: () => cssVar('--chart-tick') } },
+          tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } }
+        },
+        scales: {
+          x: {
+            stacked: stacked,
+            grid: { display: false },
+            ticks: { color: () => cssVar('--chart-tick'), maxRotation: 0, autoSkip: false }
+          },
+          y: {
+            stacked: stacked, beginAtZero: true,
+            ticks: { stepSize: 1, color: () => cssVar('--chart-tick') },
+            grid: { color: () => cssVar('--chart-grid') },
+            border: { display: false }
+          }
         }
-      }
-    };
+      };
+    }
+
+    function makeChart(canvas, labels, datasets, stacked) {
+      const chart = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: chartOptions(stacked)
+      });
+      allCharts.push(chart);
+      return chart;
+    }
+
+    // Dataset colours are baked in at creation, so re-read them on theme change.
+    document.addEventListener('themechange', () => {
+      allCharts.forEach(chart => {
+        chart.data.datasets.forEach((ds, i) => {
+          ds.backgroundColor = rampColor(i + 1);
+          ds.borderColor = cssVar('--chart-surface');
+        });
+        chart.update();
+      });
+    });
 
     async function init() {
       const [
@@ -118,7 +160,8 @@
         { data: criteria, error: cErr },
         { data: options, error: oErr },
         { data: gradings, error: gErr },
-        { data: prefVotes, error: pErr }
+        { data: prefVotes, error: pErr },
+        { data: submissions, error: sErr }
       ] = await Promise.all([
         supabase.from('questions').select('*'),
         supabase.from('answers').select('*'),
@@ -126,12 +169,16 @@
         supabase.from('grading_criteria').select('*').order('sort_order', { ascending: true }),
         supabase.from('grade_options').select('*'),
         supabase.from('gradings').select('*'),
-        supabase.from('preference_votes').select('*')
+        supabase.from('preference_votes').select('*'),
+        // voter_id is deliberately left out so it never reaches the browser.
+        supabase.from('submissions')
+          .select('question_text, answer_aspects, preferred_length, created_at')
+          .order('created_at', { ascending: false })
       ]);
 
-      if (qErr || aErr || giErr || cErr || oErr || gErr || pErr) {
-        console.error(qErr, aErr, giErr, cErr, oErr, gErr, pErr);
-        document.body.innerHTML += '<p style="color:#c62828;text-align:center;margin-top:2rem;">Error loading dashboard data.</p>';
+      if (qErr || aErr || giErr || cErr || oErr || gErr || pErr || sErr) {
+        console.error(qErr, aErr, giErr, cErr, oErr, gErr, pErr, sErr);
+        document.body.innerHTML += '<p style="color:var(--danger-color);text-align:center;margin-top:2rem;">Error loading dashboard data.</p>';
         return;
       }
 
@@ -139,7 +186,48 @@
       renderGradingsGlobal(gradings, criteria, options);
       renderGradingsDetail(gradings, gradeItems, criteria, options);
       renderPreferencesGlobal(prefVotes, answers, questions);
+      renderSubmissions(submissions);
       renderPreferencesDetail(prefVotes, answers, questions);
+    }
+
+    function renderSubmissions(submissions) {
+      const container = document.getElementById('submissions-list');
+
+      if (!submissions || submissions.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted-color);">No questions submitted yet.</p>';
+        return;
+      }
+
+      submissions.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'submission-card';
+
+        const question = document.createElement('p');
+        question.className = 'submission-question';
+        question.textContent = s.question_text;
+        card.appendChild(question);
+
+        const meta = document.createElement('div');
+        meta.className = 'submission-meta';
+        const length = document.createElement('span');
+        length.className = 'submission-chip';
+        length.textContent = s.preferred_length === 'short' ? 'Short answer' : 'Long answer';
+        meta.appendChild(length);
+        card.appendChild(meta);
+
+        if (s.answer_aspects && s.answer_aspects.trim()) {
+          const topicsLabel = document.createElement('div');
+          topicsLabel.className = 'sub-heading';
+          topicsLabel.textContent = 'Topics the answer should cover';
+          const topics = document.createElement('p');
+          topics.className = 'submission-topics';
+          topics.textContent = s.answer_aspects.trim();
+          card.appendChild(topicsLabel);
+          card.appendChild(topics);
+        }
+
+        container.appendChild(card);
+      });
     }
 
     function renderOverview(gradings, prefVotes, questions, criteria) {
@@ -163,30 +251,16 @@
       const scoreValues = [5, 3, 1];
       const labels = criteria.map(c => c.name);
 
-      const datasets = scoreValues.map(score => {
+      // Scores are ordinal too (5 best, 1 worst), so they share the ramp:
+      // level 1 = the darkest step = the best score.
+      const datasets = scoreValues.map((score, i) => {
         const counts = criteria.map(c => {
           return gradings.filter(g => (g.scores && g.scores[c.id]) === score).length;
         });
-        return {
-          label: 'Score ' + score,
-          data: counts,
-          borderWidth: 1
-        };
+        return rampDataset('Score ' + score, i + 1, counts, i === scoreValues.length - 1);
       });
 
-      const ctx = document.getElementById('gradings-global-chart').getContext('2d');
-      charts.gradingsGlobal = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: labels, datasets: datasets },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } },
-            x: { ticks: { maxRotation: 0, autoSkip: false } }
-          }
-        }
-      });
+      makeChart(document.getElementById('gradings-global-chart'), labels, datasets, false);
     }
 
     function renderGradingsDetail(gradings, gradeItems, criteria, options) {
@@ -252,9 +326,12 @@
               <div class="mini-histogram">
                 ${scoreValues.map(v => `
                   <div class="hist-bar">
-                    <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%"></div>
+                    <div class="hist-track">
+                      <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%">
+                        <div class="hist-count">${counts[v]}</div>
+                      </div>
+                    </div>
                     <div class="hist-label">${v}</div>
-                    <div class="hist-count">${counts[v]}</div>
                   </div>
                 `).join('')}
               </div>
@@ -423,12 +500,7 @@
         datasets.push(prefDataset(rank, data, rank === maxRank));
       }
 
-      const ctx = document.getElementById('preferences-global-chart').getContext('2d');
-      charts.preferencesGlobal = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: models, datasets: datasets },
-        options: prefChartOptions
-      });
+      makeChart(document.getElementById('preferences-global-chart'), models, datasets, true);
 
       // Transition matrix: rank1 model → rank2 model
       const transitions = {};
@@ -538,11 +610,14 @@
 
           // Chart.js cannot measure a canvas inside a display:none parent, so
           // hold off until the accordion is opened for the first time.
-          buildChart = () => new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: { labels: models, datasets: datasets },
-            options: prefChartOptions
-          });
+          // Built lazily, so re-read the ramp in case the theme changed since.
+          buildChart = () => {
+            datasets.forEach((ds, i) => {
+              ds.backgroundColor = rampColor(i + 1);
+              ds.borderColor = cssVar('--chart-surface');
+            });
+            makeChart(canvas, models, datasets, true);
+          };
         }
 
         const heading = document.createElement('h4');
