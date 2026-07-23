@@ -18,6 +18,11 @@
     <p id="status" style="margin-bottom: 1.5rem; display: none;"></p>
 
     <div id="validation-card" style="display: none;">
+      <div class="pair-nav">
+        <button type="button" class="btn btn-small btn-view prev-btn">&larr; Previous</button>
+        <button type="button" class="btn btn-small btn-view next-btn">Next &rarr;</button>
+      </div>
+
       <div class="source-doc" id="source-doc"></div>
 
       <div class="qa-block">
@@ -64,8 +69,8 @@
       </form>
 
       <div class="pair-nav">
-        <button type="button" class="btn btn-small btn-view" id="prev-btn">&larr; Previous</button>
-        <button type="button" class="btn btn-small btn-view" id="next-btn">Next &rarr;</button>
+        <button type="button" class="btn btn-small btn-view prev-btn">&larr; Previous</button>
+        <button type="button" class="btn btn-small btn-view next-btn">Next &rarr;</button>
       </div>
     </div>
   </div>
@@ -156,8 +161,9 @@
       document.querySelectorAll('.verdict-option').forEach(el => el.classList.remove('selected'));
       syncCommentRequirement();
 
-      document.getElementById('prev-btn').disabled = index === 0;
-      document.getElementById('next-btn').disabled = index === pending.length - 1;
+      // The same controls appear above and below the pair, so both rows move together.
+      document.querySelectorAll('.prev-btn').forEach(b => { b.disabled = index === 0; });
+      document.querySelectorAll('.next-btn').forEach(b => { b.disabled = index === pending.length - 1; });
 
       document.getElementById('question-display').textContent = currentCandidate.question;
 
@@ -290,21 +296,17 @@
 
     document.getElementById('validation-form').addEventListener('submit', submitValidation);
 
-    document.getElementById('prev-btn').addEventListener('click', () => {
-      if (index === 0) return;
-      index--;
+    function step(delta) {
+      const target = index + delta;
+      if (target < 0 || target >= pending.length) return;
+      index = target;
       statusEl.style.display = 'none';
       window.scrollTo(0, 0);
       renderCandidate();
-    });
+    }
 
-    document.getElementById('next-btn').addEventListener('click', () => {
-      if (index >= pending.length - 1) return;
-      index++;
-      statusEl.style.display = 'none';
-      window.scrollTo(0, 0);
-      renderCandidate();
-    });
+    document.querySelectorAll('.prev-btn').forEach(b => b.addEventListener('click', () => step(-1)));
+    document.querySelectorAll('.next-btn').forEach(b => b.addEventListener('click', () => step(1)));
 
     init();
   </script>

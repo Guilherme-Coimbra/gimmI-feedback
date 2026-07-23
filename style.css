@@ -846,12 +846,13 @@ body.home {
   margin-top: 0.9rem;
 }
 
-/* Stepping through the pairs still waiting on this reviewer. */
+/* Stepping through the pairs still waiting on this reviewer. The same controls
+   sit above and below the pair, so a long answer never has to be scrolled back. */
 .pair-nav {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .unanswerable-note {
