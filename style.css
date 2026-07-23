@@ -137,6 +137,18 @@ body.home {
   text-decoration: none;
 }
 
+.actions .btn {
+  font-weight: 700;
+}
+
+.badge-new {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 0.08em;
+  opacity: 0.85;
+}
+
 .btn {
   display: inline-block;
   width: 100%;

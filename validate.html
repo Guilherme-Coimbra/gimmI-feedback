@@ -15,7 +15,6 @@
     <h1 class="page-title">Validate a Generated Q&amp;A</h1>
     <p class="page-subtitle">These pairs were generated from lab papers to train our model. Check that the question makes sense and the answer is correct.</p>
 
-    <p id="progress" class="page-subtitle" style="display: none;"></p>
     <p id="status" style="margin-bottom: 1.5rem; display: none;"></p>
 
     <div id="validation-card" style="display: none;">
@@ -80,7 +79,6 @@
     }
 
     const statusEl = document.getElementById('status');
-    const progressEl = document.getElementById('progress');
     const card = document.getElementById('validation-card');
     const commentEl = document.getElementById('comment');
     const commentLabel = document.getElementById('comment-required');
@@ -126,13 +124,9 @@
 
       if (!currentCandidate) {
         card.style.display = 'none';
-        progressEl.style.display = 'none';
         showStatus('All done — you have validated every generated question. Thank you!', 'var(--ok-color)');
         return;
       }
-
-      progressEl.textContent = `${doneIds.size} of ${candidates.length} validated`;
-      progressEl.style.display = 'block';
 
       renderCandidate();
       card.style.display = 'block';
