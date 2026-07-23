@@ -28,6 +28,12 @@
   --rank-2: #5598e7;
   --rank-3: #2a78d6;
   --rank-4: #184f95;
+
+  /* Scores get their own hue so "pale = best" never carries over from the
+     preference charts, where pale blue is 1st place. Level 1 is a score of 5. */
+  --score-1: #f0c674;
+  --score-2: #cf9433;
+  --score-3: #8f6420;
   --contribute-color: #835ccc;
   --contribute-hover: #9575d9;
 }
@@ -58,6 +64,11 @@
   --rank-2: #2a78d6;
   --rank-3: #5598e7;
   --rank-4: #86b6ef;
+
+  /* Same amber ramp re-stepped for the light chart surface, darkest at 5. */
+  --score-1: #7a4f0a;
+  --score-2: #b8862b;
+  --score-3: #e0bd76;
   --contribute-color: #6f42c1;
   --contribute-hover: #5a349f;
 }
@@ -754,6 +765,11 @@ body.home {
   font-size: 0.7rem;
   color: var(--muted-color);
 }
+
+/* Per-criterion score bars follow the same ramp as the Gradings Overview chart. */
+.hist-score-1 { background: var(--score-1); }
+.hist-score-2 { background: var(--score-2); }
+.hist-score-3 { background: var(--score-3); }
 
 /* SFT validation results — the two verdicts are opposites rather than steps on
    a scale, so they get the approve/reject colours, not the ordinal ramp. */

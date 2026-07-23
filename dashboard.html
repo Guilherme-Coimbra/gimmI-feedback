@@ -89,15 +89,37 @@
     const reviewerId = localStorage.getItem('voter_id');
 
     // Both preference position (1st..4th) and grading score (5/3/1) are ordinal
-    // scales, so both use one single-hue ramp with the best value darkest —
-    // never a hue per level. The steps live in style.css so each theme carries
-    // its own set, validated against that theme's chart surface.
+    // scales, so both use a single-hue ramp with the best value most prominent —
+    // never a hue per level. They get *different* hues, though: a reader who
+    // learns "palest blue means 1st preference" must not carry that reading into
+    // the score charts, where the pale end is a low score, not a good one. The
+    // steps live in style.css so each theme carries its own set, validated
+    // against that theme's chart surface.
+    //
+    // Level 1 is always the best value: 1st preference, or a score of 5.
     const allCharts = [];
     const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    const rampColor = level => cssVar('--rank-' + level) || cssVar('--rank-4');
+    const rampColor = (level, ramp) => cssVar(`--${ramp}-${level}`) || cssVar(`--${ramp}-1`);
 
     const ORDINALS = ['1st', '2nd', '3rd', '4th'];
     const prefLabel = n => (ORDINALS[n - 1] || n + 'th') + ' Preference';
+
+    // Worst to best, left to right, so the axis climbs the way a scale should.
+    // The ramp level is keyed off the score itself rather than the position in
+    // this array, so 5 stays the most prominent shade wherever it is drawn.
+    const SCORE_VALUES = [1, 3, 5];
+    const SCORE_LEVELS = { 5: 1, 3: 2, 1: 3 };
+
+    // Each criterion names its own scores ("5: Flawless", "1: Hallucinated"),
+    // and the leading word is the part worth showing next to the number.
+    function scoreNames(options) {
+      const byCriterion = {};
+      (options || []).forEach(o => {
+        if (!byCriterion[o.criteria_id]) byCriterion[o.criteria_id] = {};
+        byCriterion[o.criteria_id][o.score_value] = String(o.description).split(':')[0].trim();
+      });
+      return byCriterion;
+    }
 
     // Every chart is normalised against its own column, never a global total:
     // each bar is a share of the responses that column actually received. A
@@ -108,13 +130,18 @@
     //
     // 2px surface-coloured gap between stacked segments; only the topmost
     // segment rounds, so the stack stays anchored to the baseline.
-    function rampDataset(label, level, counts, totals, isTop) {
+    // `notes` is an optional per-column caption — the criterion's own word for
+    // that score — surfaced in the tooltip.
+    function rampDataset({ label, level, ramp, counts, totals, isTop, notes }) {
       return {
         label: label,
         data: counts.map((n, i) => (totals[i] ? n / totals[i] * 100 : 0)),
         counts: counts,
         totals: totals,
-        backgroundColor: rampColor(level),
+        notes: notes || null,
+        level: level,
+        ramp: ramp,
+        backgroundColor: rampColor(level, ramp),
         borderColor: cssVar('--chart-surface'),
         borderWidth: 2,
         borderRadius: isTop ? { topLeft: 4, topRight: 4 } : 0,
@@ -123,7 +150,18 @@
       };
     }
 
-    const prefDataset = (rank, counts, totals, isTop) => rampDataset(prefLabel(rank), rank, counts, totals, isTop);
+    // Preference stacks read like a leaderboard: 1st preference sits on top, so
+    // the datasets are built worst-first and the topmost one is rank 1.
+    const prefDataset = (rank, counts, totals) =>
+      rampDataset({ label: prefLabel(rank), level: rank, ramp: 'rank', counts, totals, isTop: rank === 1 });
+
+    function prefDatasets(maxRank, countsForRank, totals) {
+      const datasets = [];
+      for (let rank = maxRank; rank >= 1; rank--) {
+        datasets.push(prefDataset(rank, countsForRank(rank), totals));
+      }
+      return datasets;
+    }
 
     const pct = n => (Math.round(n * 10) / 10) + '%';
 
@@ -135,13 +173,22 @@
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'top', labels: { boxWidth: 12, boxHeight: 12, color: () => cssVar('--chart-tick') } },
+          // Stacked charts are built worst-first so the best lands on top; the
+          // legend is reversed back so it still reads 1st, 2nd, 3rd.
+          legend: {
+            position: 'top',
+            reverse: stacked,
+            labels: { boxWidth: 12, boxHeight: 12, color: () => cssVar('--chart-tick') }
+          },
           tooltip: {
             callbacks: {
               label: c => {
-                const n = c.dataset.counts[c.dataIndex];
-                const total = c.dataset.totals[c.dataIndex];
-                return `${c.dataset.label}: ${pct(c.parsed.y)} (${n} of ${total})`;
+                const ds = c.dataset;
+                const n = ds.counts[c.dataIndex];
+                const total = ds.totals[c.dataIndex];
+                const note = ds.notes && ds.notes[c.dataIndex];
+                const name = note ? `${ds.label} (${note})` : ds.label;
+                return `${name}: ${pct(c.parsed.y)} (${n} of ${total})`;
               }
             }
           }
@@ -173,10 +220,12 @@
     }
 
     // Dataset colours are baked in at creation, so re-read them on theme change.
+    // Each dataset carries its own ramp and level, since dataset order no longer
+    // matches level once the stacks are built worst-first.
     document.addEventListener('themechange', () => {
       allCharts.forEach(chart => {
-        chart.data.datasets.forEach((ds, i) => {
-          ds.backgroundColor = rampColor(i + 1);
+        chart.data.datasets.forEach(ds => {
+          ds.backgroundColor = rampColor(ds.level, ds.ramp);
           ds.borderColor = cssVar('--chart-surface');
         });
         chart.update();
@@ -640,22 +689,24 @@
         return;
       }
 
-      const scoreValues = [5, 3, 1];
       const labels = criteria.map(c => c.name);
+      const names = scoreNames(options);
 
       // Each criterion is a share of the gradings that actually scored it, so a
       // criterion added later reads on the same scale as the original ones.
       const totals = criteria.map(c =>
-        gradings.filter(g => scoreValues.includes(g.scores && g.scores[c.id])).length);
+        gradings.filter(g => SCORE_VALUES.includes(g.scores && g.scores[c.id])).length);
 
-      // Scores are ordinal too (5 best, 1 worst), so they share the ramp:
-      // level 1 = the darkest step = the best score.
-      const datasets = scoreValues.map((score, i) => {
-        const counts = criteria.map(c => {
-          return gradings.filter(g => (g.scores && g.scores[c.id]) === score).length;
-        });
-        return rampDataset('Score ' + score, i + 1, counts, totals, i === scoreValues.length - 1);
-      });
+      // Grouped rather than stacked, so every bar is its own top and rounds.
+      const datasets = SCORE_VALUES.map(score => rampDataset({
+        label: 'Score ' + score,
+        level: SCORE_LEVELS[score],
+        ramp: 'score',
+        counts: criteria.map(c => gradings.filter(g => (g.scores && g.scores[c.id]) === score).length),
+        totals: totals,
+        isTop: true,
+        notes: criteria.map(c => (names[c.id] || {})[score] || null)
+      }));
 
       makeChart(document.getElementById('gradings-global-chart'), labels, datasets, false);
     }
@@ -673,8 +724,7 @@
         gradingsByItem[g.grade_item_id].push(g);
       });
 
-      const scoreValues = [5, 3, 1];
-      const scoreLabels = { 5: '5', 3: '3', 1: '1' };
+      const names = scoreNames(options);
 
       gradeItems.forEach(item => {
         const itemGradings = gradingsByItem[item.id] || [];
@@ -709,8 +759,9 @@
           criteria.forEach(c => {
             const scores = itemGradings.map(g => (g.scores && g.scores[c.id]) ? g.scores[c.id] : null).filter(v => v !== null);
             const counts = {};
-            scoreValues.forEach(v => counts[v] = 0);
+            SCORE_VALUES.forEach(v => counts[v] = 0);
             scores.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
+            const criterionNames = names[c.id] || {};
 
             const card = document.createElement('div');
             card.className = 'criteria-card';
@@ -721,14 +772,14 @@
                 <div class="criteria-desc">${c.description}</div>
               </div>
               <div class="mini-histogram">
-                ${scoreValues.map(v => `
+                ${SCORE_VALUES.map(v => `
                   <div class="hist-bar">
                     <div class="hist-track">
-                      <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%">
+                      <div class="hist-fill hist-score-${SCORE_LEVELS[v]}" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%">
                         <div class="hist-count">${scores.length ? pct(counts[v] / scores.length * 100) : '0%'}</div>
                       </div>
                     </div>
-                    <div class="hist-label">${v}</div>
+                    <div class="hist-label">${v}${criterionNames[v] ? ' &middot; ' + criterionNames[v] : ''}</div>
                     <div class="hist-sub">${counts[v]} of ${scores.length}</div>
                   </div>
                 `).join('')}
@@ -908,13 +959,9 @@
       const totals = models.map(model =>
         validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model)).length);
 
-      const datasets = [];
-      for (let rank = 1; rank <= maxRank; rank++) {
-        const counts = models.map(model => {
-          return validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model && rankObj.rank === rank)).length;
-        });
-        datasets.push(prefDataset(rank, counts, totals, rank === maxRank));
-      }
+      const datasets = prefDatasets(maxRank, rank => models.map(model =>
+        validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model && rankObj.rank === rank)).length
+      ), totals);
 
       makeChart(document.getElementById('preferences-global-chart'), models, datasets, true);
 
@@ -1018,11 +1065,8 @@
           const totals = models.map(m =>
             Object.values(modelRankCounts[m]).reduce((sum, n) => sum + n, 0));
 
-          const datasets = [];
-          for (let rank = 1; rank <= maxRank; rank++) {
-            const counts = models.map(m => modelRankCounts[m][rank] || 0);
-            datasets.push(prefDataset(rank, counts, totals, rank === maxRank));
-          }
+          const datasets = prefDatasets(maxRank,
+            rank => models.map(m => modelRankCounts[m][rank] || 0), totals);
 
           const chartBox = document.createElement('div');
           chartBox.className = 'chart-inline';
@@ -1034,8 +1078,8 @@
           // hold off until the accordion is opened for the first time.
           // Built lazily, so re-read the ramp in case the theme changed since.
           buildChart = () => {
-            datasets.forEach((ds, i) => {
-              ds.backgroundColor = rampColor(i + 1);
+            datasets.forEach(ds => {
+              ds.backgroundColor = rampColor(ds.level, ds.ramp);
               ds.borderColor = cssVar('--chart-surface');
             });
             makeChart(canvas, models, datasets, true);
