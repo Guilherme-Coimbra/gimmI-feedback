@@ -18,6 +18,11 @@
     <p id="status" style="margin-bottom: 1.5rem; display: none;"></p>
 
     <div id="validation-card" style="display: none;">
+      <div class="pair-nav">
+        <button type="button" class="btn btn-small btn-view prev-btn">&larr; Previous</button>
+        <button type="button" class="btn btn-small btn-view next-btn">Next &rarr;</button>
+      </div>
+
       <div class="source-doc" id="source-doc"></div>
 
       <div class="qa-block">
@@ -62,6 +67,11 @@
 
         <button type="submit" class="btn">Submit and show next</button>
       </form>
+
+      <div class="pair-nav">
+        <button type="button" class="btn btn-small btn-view prev-btn">&larr; Previous</button>
+        <button type="button" class="btn btn-small btn-view next-btn">Next &rarr;</button>
+      </div>
     </div>
   </div>
 
@@ -83,7 +93,11 @@
     const commentEl = document.getElementById('comment');
     const commentLabel = document.getElementById('comment-required');
 
-    let currentCandidate = null;
+    // The pairs this reviewer has not validated yet, and where they are in
+    // that list. Held in memory so moving back and forth costs no round trip,
+    // and so a submission just drops one entry instead of reloading.
+    let pending = [];
+    let index = 0;
     let docsById = {};
 
     function showStatus(message, color) {
@@ -120,11 +134,11 @@
       (docs || []).forEach(d => { docsById[d.doc_id] = d; });
 
       const doneIds = new Set((done || []).map(v => v.candidate_id));
-      currentCandidate = candidates.find(c => !doneIds.has(c.id));
+      pending = candidates.filter(c => !doneIds.has(c.id));
+      index = 0;
 
-      if (!currentCandidate) {
-        card.style.display = 'none';
-        showStatus('All done — you have validated every generated question. Thank you!', 'var(--ok-color)');
+      if (pending.length === 0) {
+        showAllDone();
         return;
       }
 
@@ -133,7 +147,24 @@
       statusEl.style.display = 'none';
     }
 
+    function showAllDone() {
+      card.style.display = 'none';
+      showStatus('All done — you have validated every generated question. Thank you!', 'var(--ok-color)');
+    }
+
     function renderCandidate() {
+      const currentCandidate = pending[index];
+
+      // Whichever pair was on screen before, its verdict and comment must not
+      // carry over to this one.
+      document.getElementById('validation-form').reset();
+      document.querySelectorAll('.verdict-option').forEach(el => el.classList.remove('selected'));
+      syncCommentRequirement();
+
+      // The same controls appear above and below the pair, so both rows move together.
+      document.querySelectorAll('.prev-btn').forEach(b => { b.disabled = index === 0; });
+      document.querySelectorAll('.next-btn').forEach(b => { b.disabled = index === pending.length - 1; });
+
       document.getElementById('question-display').textContent = currentCandidate.question;
 
       // A candidate with no gold answer is one of the deliberately unanswerable
@@ -227,7 +258,7 @@
       const { error } = await supabase
         .from('sft_validations')
         .insert([{
-          candidate_id: currentCandidate.id,
+          candidate_id: pending[index].id,
           reviewer_id: reviewerId,
           verdict: verdict.value,
           comment: comment || null
@@ -241,15 +272,41 @@
         return;
       }
 
-      showStatus('Saved! Loading the next one...', 'var(--ok-color)');
+      // The pair is done, so it leaves the list. The one that shifts into its
+      // place becomes current, unless it was the last, in which case step back.
+      pending.splice(index, 1);
+      if (index >= pending.length) index = pending.length - 1;
+
+      showStatus('Saved!', 'var(--ok-color)');
       window.scrollTo(0, 0);
-      document.getElementById('validation-form').reset();
-      document.querySelectorAll('.verdict-option').forEach(el => el.classList.remove('selected'));
-      syncCommentRequirement();
-      setTimeout(init, 800);
+
+      if (pending.length === 0) {
+        showAllDone();
+        return;
+      }
+
+      renderCandidate();
+
+      // Clear the confirmation once it has been read, but never clobber a
+      // message that something else has put up in the meantime.
+      setTimeout(() => {
+        if (statusEl.textContent === 'Saved!') statusEl.style.display = 'none';
+      }, 1500);
     }
 
     document.getElementById('validation-form').addEventListener('submit', submitValidation);
+
+    function step(delta) {
+      const target = index + delta;
+      if (target < 0 || target >= pending.length) return;
+      index = target;
+      statusEl.style.display = 'none';
+      window.scrollTo(0, 0);
+      renderCandidate();
+    }
+
+    document.querySelectorAll('.prev-btn').forEach(b => b.addEventListener('click', () => step(-1)));
+    document.querySelectorAll('.next-btn').forEach(b => b.addEventListener('click', () => step(1)));
 
     init();
   </script>

@@ -25,6 +25,7 @@ A static website for collecting structured feedback from scientists on AI-genera
 4. **Validate Generated Questions** (`validate.html`)
    - Checks question/answer pairs generated from lab papers before they are used as SFT training data.
    - One pair at a time: read it, mark it good or not, submit, the next one loads. A reviewer is never shown a pair they have already judged.
+   - Previous/Next arrows step through the pairs still waiting on that reviewer, so one can be left for later or a whole paper worked through in a sitting. Any verdict or comment in progress is cleared on the way, and a submitted pair drops out of the list.
    - The source paper is named above every pair, with a download button when the PDF is available.
    - Rejections must carry a comment saying what is wrong.
    - Some questions are **deliberately unanswerable** — written so the paper cannot answer them, to teach the model to say so instead of inventing something. These have no gold answer; the page explains this and asks the reviewer to confirm the paper really cannot answer it.
@@ -34,6 +35,7 @@ A static website for collecting structured feedback from scientists on AI-genera
    - Headline counts, score distributions, and preference results.
    - Preference charts show how often each model took each position (1st / 2nd / 3rd), globally and per question, plus a transition matrix of which model tends to place 2nd behind each winner.
    - Submitted questions are listed and can be revised in place by any reviewer; every edit is kept as a new version with a version picker.
+   - Released SFT candidates are listed too: expanding one shows the source paper, the gold answer, a good-vs-bad histogram of the verdicts, and the reviewers' comments. Reviewer IDs are not fetched.
 
 ### Reviewer identity
 
@@ -296,8 +298,7 @@ The site auto-deploys from `main` via GitHub Pages.
 ## Known Gaps
 
 - [ ] `preference_votes` has no uniqueness constraint, so a double submission can insert duplicate votes. The app avoids it, but the database does not enforce it. `gradings` and `sft_validations` both do.
-- [ ] Grading comments are collected but not shown anywhere in the dashboard. The same is true of SFT rejection comments, which are the whole point of a rejection.
-- [ ] SFT validation results do not appear on the dashboard at all.
+- [ ] Grading comments are collected but not shown anywhere in the dashboard. SFT rejection comments are now shown; grading comments are not.
 - [ ] No export or backup of collected responses.
 - [ ] No way to restore an older version of a submitted question, only to view it.
 - [ ] Bulk import of questions and answers is still manual SQL.
