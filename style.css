@@ -28,6 +28,12 @@
   --rank-2: #5598e7;
   --rank-3: #2a78d6;
   --rank-4: #184f95;
+
+  /* Scores get their own hue so "pale = best" never carries over from the
+     preference charts, where pale blue is 1st place. Level 1 is a score of 5. */
+  --score-1: #f0c674;
+  --score-2: #cf9433;
+  --score-3: #8f6420;
   --contribute-color: #835ccc;
   --contribute-hover: #9575d9;
 }
@@ -58,6 +64,11 @@
   --rank-2: #2a78d6;
   --rank-3: #5598e7;
   --rank-4: #86b6ef;
+
+  /* Same amber ramp re-stepped for the light chart surface, darkest at 5. */
+  --score-1: #7a4f0a;
+  --score-2: #b8862b;
+  --score-3: #e0bd76;
   --contribute-color: #6f42c1;
   --contribute-hover: #5a349f;
 }
@@ -478,6 +489,31 @@ body.home {
   margin-top: 1rem;
 }
 
+/* One chart per criterion, side by side while they fit and stacked when they
+   do not, so each score can be labelled with what it means for that criterion. */
+#gradings-global {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.criterion-chart {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.criterion-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.chart-small {
+  height: 230px;
+}
+
 /* Submitted questions */
 .submission-card {
   background: var(--card-bg);
@@ -697,7 +733,7 @@ body.home {
   display: flex;
   gap: 1rem;
   align-items: flex-end;
-  height: 120px;
+  height: 150px;
   margin-top: 1rem;
 }
 
@@ -747,6 +783,18 @@ body.home {
   font-size: 0.85rem;
   color: var(--muted-color);
 }
+
+/* The bar is a percentage, so the raw count it came from sits underneath. */
+.hist-sub {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--muted-color);
+}
+
+/* Per-criterion score bars follow the same ramp as the Gradings Overview chart. */
+.hist-score-1 { background: var(--score-1); }
+.hist-score-2 { background: var(--score-2); }
+.hist-score-3 { background: var(--score-3); }
 
 /* SFT validation results — the two verdicts are opposites rather than steps on
    a scale, so they get the approve/reject colours, not the ordinal ramp. */
