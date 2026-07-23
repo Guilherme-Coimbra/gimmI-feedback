@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validate Questions — GimmI Feedback</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+  <script src="answer-format.js"></script>
+</head>
+<body>
+  <div class="container">
+    <nav class="nav"><a href="index.html">← Back to home</a></nav>
+
+    <h1 class="page-title">Validate a Generated Q&amp;A</h1>
+    <p class="page-subtitle">These pairs were generated from lab papers to train our model. Check that the question makes sense and the answer is correct.</p>
+
+    <p id="status" style="margin-bottom: 1.5rem; display: none;"></p>
+
+    <div id="validation-card" style="display: none;">
+      <div class="source-doc" id="source-doc"></div>
+
+      <div class="qa-block">
+        <h3>Question</h3>
+        <div class="question-display" id="question-display"></div>
+      </div>
+
+      <div class="qa-block" id="answer-block">
+        <h3 id="answer-heading">Gold answer</h3>
+        <div class="answer-display" id="answer-display"></div>
+        <div class="unanswerable-note" id="unanswerable-note">
+          <strong>This question was written to be unanswerable.</strong>
+          It is a deliberately tricky question the paper cannot answer, used to teach the
+          model to say so instead of inventing something. There is no gold answer to check —
+          just confirm the paper really cannot answer it.
+        </div>
+      </div>
+
+      <form id="validation-form">
+        <div class="verdict-options">
+          <label class="verdict-option" id="opt-valid">
+            <input type="radio" name="verdict" value="valid" required>
+            <div>
+              <span class="verdict-name" id="valid-name">Looks good</span>
+              <span class="verdict-desc" id="valid-desc">The question is sensible and the answer is accurate.</span>
+            </div>
+          </label>
+          <label class="verdict-option" id="opt-bad">
+            <input type="radio" name="verdict" value="not_good" required>
+            <div>
+              <span class="verdict-name" id="bad-name">Not good</span>
+              <span class="verdict-desc" id="bad-desc">Something is wrong — tell us what below.</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-group" id="comment-group">
+          <label for="comment">What is wrong with it? <span id="comment-required" style="font-weight: normal; color: var(--muted-color);">(optional)</span></label>
+
+          <textarea id="comment" placeholder="e.g. The answer states K266 but the paper says K260..."></textarea>
+        </div>
+
+        <button type="submit" class="btn">Submit and show next</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hqbgbqhajargsgvyryrk.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxYmdicWhhamFyZ3NndnlyeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NDAxMzQsImV4cCI6MjEwMDIxNjEzNH0.7F42Rtp2OiEEZKBN2XJXJhCOCX9WmIUlUVBxv9qkT5s';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const reviewerId = localStorage.getItem('voter_id');
+    if (!reviewerId) {
+      window.location.href = 'index.html';
+    }
+
+    const statusEl = document.getElementById('status');
+    const card = document.getElementById('validation-card');
+    const commentEl = document.getElementById('comment');
+    const commentLabel = document.getElementById('comment-required');
+
+    let currentCandidate = null;
+    let docsById = {};
+
+    function showStatus(message, color) {
+      statusEl.textContent = message;
+      statusEl.style.color = color;
+      statusEl.style.display = 'block';
+    }
+
+    async function init() {
+      const [
+        { data: candidates, error: cErr },
+        { data: docs, error: dErr },
+        { data: done, error: vErr }
+      ] = await Promise.all([
+        supabase.from('sft_candidates').select('*').eq('is_active', true).order('id', { ascending: true }),
+        supabase.from('sft_documents').select('*'),
+        supabase.from('sft_validations').select('candidate_id').eq('reviewer_id', reviewerId)
+      ]);
+
+      if (cErr || dErr || vErr) {
+        console.error(cErr, dErr, vErr);
+        card.style.display = 'none';
+        showStatus('Error loading data. Please refresh.', 'var(--danger-color)');
+        return;
+      }
+
+      if (!candidates || candidates.length === 0) {
+        card.style.display = 'none';
+        showStatus('No generated questions available yet. Check back later!', 'var(--muted-color)');
+        return;
+      }
+
+      docsById = {};
+      (docs || []).forEach(d => { docsById[d.doc_id] = d; });
+
+      const doneIds = new Set((done || []).map(v => v.candidate_id));
+      currentCandidate = candidates.find(c => !doneIds.has(c.id));
+
+      if (!currentCandidate) {
+        card.style.display = 'none';
+        showStatus('All done — you have validated every generated question. Thank you!', 'var(--ok-color)');
+        return;
+      }
+
+      renderCandidate();
+      card.style.display = 'block';
+      statusEl.style.display = 'none';
+    }
+
+    function renderCandidate() {
+      document.getElementById('question-display').textContent = currentCandidate.question;
+
+      // A candidate with no gold answer is one of the deliberately unanswerable
+      // questions, so the reviewer is asked a different thing about it.
+      const unanswerable = !currentCandidate.gold_answer;
+      document.getElementById('answer-display').style.display = unanswerable ? 'none' : 'block';
+      document.getElementById('unanswerable-note').style.display = unanswerable ? 'block' : 'none';
+      document.getElementById('answer-heading').textContent = unanswerable ? 'No answer expected' : 'Gold answer';
+      if (!unanswerable) {
+        document.getElementById('answer-display').textContent = formatAnswerText(currentCandidate.gold_answer);
+      }
+
+      document.getElementById('valid-name').textContent = unanswerable ? 'Correctly unanswerable' : 'Looks good';
+      document.getElementById('valid-desc').textContent = unanswerable
+        ? 'The paper genuinely cannot answer this question.'
+        : 'The question is sensible and the answer is accurate.';
+      document.getElementById('bad-name').textContent = unanswerable ? 'Actually answerable' : 'Not good';
+      document.getElementById('bad-desc').textContent = unanswerable
+        ? 'The paper does answer this — tell us where below.'
+        : 'Something is wrong — tell us what below.';
+
+      const doc = docsById[currentCandidate.doc_id];
+      const sourceEl = document.getElementById('source-doc');
+      sourceEl.innerHTML = '';
+
+      if (!doc) return;
+
+      const intro = document.createElement('div');
+      intro.className = 'source-label';
+      intro.textContent = 'Generated from';
+
+      const title = document.createElement('div');
+      title.className = 'source-title';
+      title.textContent = doc.title;
+
+      const authors = document.createElement('div');
+      authors.className = 'source-authors';
+      authors.textContent = doc.authors;
+
+      sourceEl.appendChild(intro);
+      sourceEl.appendChild(title);
+      sourceEl.appendChild(authors);
+
+      // The download button only appears once a URL has been recorded for the paper.
+      if (doc.doc_url) {
+        const link = document.createElement('a');
+        link.className = 'btn btn-small';
+        link.href = doc.doc_url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = 'Download the paper';
+        sourceEl.appendChild(link);
+      }
+    }
+
+    // A rejection has to say what is wrong; approval does not.
+    function syncCommentRequirement() {
+      const verdict = document.querySelector('input[name="verdict"]:checked');
+      const rejecting = verdict && verdict.value === 'not_good';
+      commentLabel.textContent = rejecting ? '(required)' : '(optional)';
+      commentEl.required = rejecting;
+    }
+
+    document.querySelectorAll('input[name="verdict"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('.verdict-option').forEach(el => el.classList.remove('selected'));
+        radio.closest('.verdict-option').classList.add('selected');
+        syncCommentRequirement();
+      });
+    });
+
+    async function submitValidation(event) {
+      event.preventDefault();
+
+      const verdict = document.querySelector('input[name="verdict"]:checked');
+      if (!verdict) {
+        showStatus('Please choose whether the pair is good.', 'var(--danger-color)');
+        return;
+      }
+
+      const comment = commentEl.value.trim();
+      if (verdict.value === 'not_good' && !comment) {
+        showStatus('Please describe what is wrong with this pair.', 'var(--danger-color)');
+        commentEl.focus();
+        return;
+      }
+
+      const button = event.target.querySelector('button');
+      button.disabled = true;
+
+      const { error } = await supabase
+        .from('sft_validations')
+        .insert([{
+          candidate_id: currentCandidate.id,
+          reviewer_id: reviewerId,
+          verdict: verdict.value,
+          comment: comment || null
+        }]);
+
+      button.disabled = false;
+
+      if (error) {
+        console.error(error);
+        showStatus('Error saving your validation. Please try again.', 'var(--danger-color)');
+        return;
+      }
+
+      showStatus('Saved! Loading the next one...', 'var(--ok-color)');
+      window.scrollTo(0, 0);
+      document.getElementById('validation-form').reset();
+      document.querySelectorAll('.verdict-option').forEach(el => el.classList.remove('selected'));
+      syncCommentRequirement();
+      setTimeout(init, 800);
+    }
+
+    document.getElementById('validation-form').addEventListener('submit', submitValidation);
+
+    init();
+  </script>
+</body>
+</html>

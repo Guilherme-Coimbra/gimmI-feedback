@@ -28,6 +28,8 @@
   --rank-2: #5598e7;
   --rank-3: #2a78d6;
   --rank-4: #184f95;
+  --contribute-color: #835ccc;
+  --contribute-hover: #9575d9;
 }
 
 :root[data-theme="light"] {
@@ -56,6 +58,8 @@
   --rank-2: #2a78d6;
   --rank-3: #5598e7;
   --rank-4: #86b6ef;
+  --contribute-color: #6f42c1;
+  --contribute-hover: #5a349f;
 }
 
 /* Theme toggle (injected by theme.js) */
@@ -133,6 +137,18 @@ body.home {
   text-decoration: none;
 }
 
+.actions .btn {
+  font-weight: 700;
+}
+
+.badge-new {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 0.08em;
+  opacity: 0.85;
+}
+
 .btn {
   display: inline-block;
   width: 100%;
@@ -155,6 +171,28 @@ body.home {
 
 .btn:active {
   transform: scale(0.98);
+}
+
+/* Home actions are coloured by what they ask of the reviewer: reviewing work
+   (the default accent), contributing a new question, or just looking. */
+.btn-contribute {
+  background-color: var(--contribute-color);
+}
+
+.btn-contribute:hover {
+  background-color: var(--contribute-hover);
+}
+
+.btn-view {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.btn-view:hover {
+  background-color: transparent;
+  border-color: var(--accent-color);
+  color: var(--accent-color);
 }
 
 /* General page layout */
@@ -726,8 +764,111 @@ body.home {
   border-bottom: none;
 }
 
+/* Validate page */
+.source-doc {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--accent-color);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.source-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-color);
+  margin-bottom: 0.4rem;
+}
+
+.source-title {
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.35rem;
+}
+
+.source-authors {
+  font-size: 0.85rem;
+  color: var(--muted-color);
+  line-height: 1.5;
+}
+
+.source-doc .btn {
+  margin-top: 0.9rem;
+}
+
+.unanswerable-note {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--contribute-color);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: var(--muted-color);
+}
+
+.unanswerable-note strong {
+  display: block;
+  color: var(--text-color);
+  margin-bottom: 0.35rem;
+}
+
+.qa-block h3 {
+  font-size: 0.8rem;
+  color: var(--muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.verdict-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.verdict-option {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+}
+
+.verdict-option:hover {
+  border-color: var(--accent-color);
+}
+
+#opt-valid.selected {
+  border-color: var(--ok-color);
+}
+
+#opt-bad.selected {
+  border-color: var(--danger-color);
+}
+
+.verdict-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.verdict-desc {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted-color);
+  line-height: 1.4;
+}
+
 @media (max-width: 640px) {
-  .comparison {
+  .comparison,
+  .verdict-options {
     flex-direction: column;
   }
 }
