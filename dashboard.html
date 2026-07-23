@@ -28,7 +28,7 @@
     <!-- Gradings Global -->
     <section class="dashboard-section">
       <h2>Gradings Overview</h2>
-      <p class="section-desc">Score distribution across all criteria and all answers.</p>
+      <p class="section-desc">Score distribution across all criteria and all answers, as a share of the gradings each criterion received. Tap a bar for the count behind it.</p>
       <div class="chart-container chart-fixed">
         <canvas id="gradings-global-chart"></canvas>
       </div>
@@ -44,7 +44,7 @@
     <!-- Preferences Global -->
     <section class="dashboard-section">
       <h2>Preferences Overview</h2>
-      <p class="section-desc">How often each model was ranked 1st, 2nd, 3rd, or 4th across all bracket tournaments.</p>
+      <p class="section-desc">Where each model placed, as a share of the rankings that model actually took part in — so an answer added to a question later is still read on the same scale as the rest. Tap a bar for the count behind it.</p>
       <div class="chart-container chart-fixed">
         <canvas id="preferences-global-chart"></canvas>
       </div>
@@ -57,7 +57,7 @@
     <!-- Preferences Detail -->
     <section class="dashboard-section">
       <h2>Preferences by Question</h2>
-      <p class="section-desc">Click a question to see how often each model took each preference position, and expand any answer to read it.</p>
+      <p class="section-desc">Click a question to see where each model placed on it, again as a share of that model's own rankings, and expand any answer to read it.</p>
       <div id="preferences-detail"></div>
     </section>
 
@@ -99,12 +99,21 @@
     const ORDINALS = ['1st', '2nd', '3rd', '4th'];
     const prefLabel = n => (ORDINALS[n - 1] || n + 'th') + ' Preference';
 
+    // Every chart is normalised against its own column, never a global total:
+    // each bar is a share of the responses that column actually received. A
+    // model added late, or a criterion with fewer ratings, is then read on the
+    // same footing as the rest — three votes that were all 1st place show as
+    // 100% first preference rather than a stub next to a long-running model.
+    // The raw counts ride along on the dataset so the tooltip can name them.
+    //
     // 2px surface-coloured gap between stacked segments; only the topmost
     // segment rounds, so the stack stays anchored to the baseline.
-    function rampDataset(label, level, data, isTop) {
+    function rampDataset(label, level, counts, totals, isTop) {
       return {
         label: label,
-        data: data,
+        data: counts.map((n, i) => (totals[i] ? n / totals[i] * 100 : 0)),
+        counts: counts,
+        totals: totals,
         backgroundColor: rampColor(level),
         borderColor: cssVar('--chart-surface'),
         borderWidth: 2,
@@ -114,7 +123,9 @@
       };
     }
 
-    const prefDataset = (rank, data, isTop) => rampDataset(prefLabel(rank), rank, data, isTop);
+    const prefDataset = (rank, counts, totals, isTop) => rampDataset(prefLabel(rank), rank, counts, totals, isTop);
+
+    const pct = n => (Math.round(n * 10) / 10) + '%';
 
     // Colours are read as callbacks so a theme switch is picked up on update().
     // Preference counts stack (they total one vote per voter); grading scores
@@ -125,7 +136,15 @@
         maintainAspectRatio: false,
         plugins: {
           legend: { position: 'top', labels: { boxWidth: 12, boxHeight: 12, color: () => cssVar('--chart-tick') } },
-          tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } }
+          tooltip: {
+            callbacks: {
+              label: c => {
+                const n = c.dataset.counts[c.dataIndex];
+                const total = c.dataset.totals[c.dataIndex];
+                return `${c.dataset.label}: ${pct(c.parsed.y)} (${n} of ${total})`;
+              }
+            }
+          }
         },
         scales: {
           x: {
@@ -134,8 +153,8 @@
             ticks: { color: () => cssVar('--chart-tick'), maxRotation: 0, autoSkip: false }
           },
           y: {
-            stacked: stacked, beginAtZero: true,
-            ticks: { stepSize: 1, color: () => cssVar('--chart-tick') },
+            stacked: stacked, beginAtZero: true, max: 100,
+            ticks: { stepSize: 20, callback: v => v + '%', color: () => cssVar('--chart-tick') },
             grid: { color: () => cssVar('--chart-grid') },
             border: { display: false }
           }
@@ -331,10 +350,11 @@
             <div class="hist-bar">
               <div class="hist-track">
                 <div class="hist-fill hist-${b.cls}" style="height: ${b.count / reviews.length * 100}%">
-                  <div class="hist-count">${b.count}</div>
+                  <div class="hist-count">${pct(b.count / reviews.length * 100)}</div>
                 </div>
               </div>
               <div class="hist-label">${b.name}</div>
+              <div class="hist-sub">${b.count} of ${reviews.length}</div>
             </div>
           `).join('');
           body.appendChild(hist);
@@ -623,13 +643,18 @@
       const scoreValues = [5, 3, 1];
       const labels = criteria.map(c => c.name);
 
+      // Each criterion is a share of the gradings that actually scored it, so a
+      // criterion added later reads on the same scale as the original ones.
+      const totals = criteria.map(c =>
+        gradings.filter(g => scoreValues.includes(g.scores && g.scores[c.id])).length);
+
       // Scores are ordinal too (5 best, 1 worst), so they share the ramp:
       // level 1 = the darkest step = the best score.
       const datasets = scoreValues.map((score, i) => {
         const counts = criteria.map(c => {
           return gradings.filter(g => (g.scores && g.scores[c.id]) === score).length;
         });
-        return rampDataset('Score ' + score, i + 1, counts, i === scoreValues.length - 1);
+        return rampDataset('Score ' + score, i + 1, counts, totals, i === scoreValues.length - 1);
       });
 
       makeChart(document.getElementById('gradings-global-chart'), labels, datasets, false);
@@ -700,10 +725,11 @@
                   <div class="hist-bar">
                     <div class="hist-track">
                       <div class="hist-fill" style="height: ${scores.length ? (counts[v] / scores.length * 100) : 0}%">
-                        <div class="hist-count">${counts[v]}</div>
+                        <div class="hist-count">${scores.length ? pct(counts[v] / scores.length * 100) : '0%'}</div>
                       </div>
                     </div>
                     <div class="hist-label">${v}</div>
+                    <div class="hist-sub">${counts[v]} of ${scores.length}</div>
                   </div>
                 `).join('')}
               </div>
@@ -800,14 +826,25 @@
             }
           }
         } else {
+          // A voter can only rank what they were actually shown. An answer
+          // added to a question after they voted must not be folded into their
+          // ranking as a zero-win last place: that would invent a placement it
+          // never earned and push every other answer down a rung.
+          const votedLabels = new Set();
+          voterVotes.forEach(v => {
+            votedLabels.add(v.answer_a_label);
+            votedLabels.add(v.answer_b_label);
+          });
+          const votedAnswers = ansList.filter(a => votedLabels.has(a.label));
+
           // Round-robin (or fallback): count wins
           const winCounts = {};
-          ansList.forEach(a => winCounts[a.label] = 0);
+          votedAnswers.forEach(a => winCounts[a.label] = 0);
           voterVotes.forEach(v => {
             winCounts[v.winner_label] = (winCounts[v.winner_label] || 0) + 1;
           });
 
-          const sorted = ansList
+          const sorted = votedAnswers
             .map(a => ({ ...a, wins: winCounts[a.label] || 0 }))
             .sort((a, b) => b.wins - a.wins);
 
@@ -864,12 +901,19 @@
       const models = [...new Set(validRankings.flatMap(r => r.ranks.map(rank => rank.model)))].sort();
       const maxRank = Math.max(...validRankings.flatMap(r => r.ranks.map(rank => rank.rank)));
 
+      // A model is measured against the rankings it actually took part in, not
+      // against every ranking ever cast. An answer added to a question that has
+      // already been voted on has fewer rankings behind it, and this keeps its
+      // record readable instead of dwarfed.
+      const totals = models.map(model =>
+        validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model)).length);
+
       const datasets = [];
       for (let rank = 1; rank <= maxRank; rank++) {
-        const data = models.map(model => {
+        const counts = models.map(model => {
           return validRankings.filter(r => r.ranks.some(rankObj => rankObj.model === model && rankObj.rank === rank)).length;
         });
-        datasets.push(prefDataset(rank, data, rank === maxRank));
+        datasets.push(prefDataset(rank, counts, totals, rank === maxRank));
       }
 
       makeChart(document.getElementById('preferences-global-chart'), models, datasets, true);
@@ -968,10 +1012,16 @@
             });
           });
 
+          // Same per-model denominator as the global chart: how many rankings
+          // placed this model at all, which is not the same for every answer
+          // once one is added to a question later than the others.
+          const totals = models.map(m =>
+            Object.values(modelRankCounts[m]).reduce((sum, n) => sum + n, 0));
+
           const datasets = [];
           for (let rank = 1; rank <= maxRank; rank++) {
-            const data = models.map(m => modelRankCounts[m][rank] || 0);
-            datasets.push(prefDataset(rank, data, rank === maxRank));
+            const counts = models.map(m => modelRankCounts[m][rank] || 0);
+            datasets.push(prefDataset(rank, counts, totals, rank === maxRank));
           }
 
           const chartBox = document.createElement('div');

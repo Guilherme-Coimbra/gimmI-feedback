@@ -33,7 +33,8 @@ A static website for collecting structured feedback from scientists on AI-genera
 
 5. **Dashboard** (`dashboard.html`)
    - Headline counts, score distributions, and preference results.
-   - Preference charts show how often each model took each position (1st / 2nd / 3rd), globally and per question, plus a transition matrix of which model tends to place 2nd behind each winner.
+   - Preference charts show where each model placed (1st / 2nd / 3rd), globally and per question, plus a transition matrix of which model tends to place 2nd behind each winner.
+   - **Every chart is normalised against its own column**, never a global total: each bar is a share of the responses that criterion or model actually received. A model that appeared in only three rankings and won all three reads 100% first preference rather than a stub beside a long-running model. Hovering or tapping a bar gives the percentage and the raw count it came from; the CSS histograms print the count under the axis label.
    - Submitted questions are listed and can be revised in place by any reviewer; every edit is kept as a new version with a version picker.
    - Released SFT candidates are listed too: expanding one shows the source paper, the gold answer, a good-vs-bad histogram of the verdicts, and the reviewers' comments. Reviewer IDs are not fetched.
 
