@@ -1,0 +1,21 @@
+.env
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.venv
+assets/
+learning-records/
+lessons/
+reference/
+GIMM AI Co-Scientist Feedback Session v2 (Responses).xlsx
+GIMM AI Co-Scientist - Feedback Session forms.pdf
+MISSION.md
+NOTES.md
+RESOURCES.md
+GIMM AI Co-Scientist - Text.txt
+extracted_pdf_text.txt
+preference_data.txt
+seed-data.md
+alias.txt
+submitted-questions-seed.txt
+users.txt

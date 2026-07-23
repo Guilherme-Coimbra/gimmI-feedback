@@ -726,8 +726,94 @@ body.home {
   border-bottom: none;
 }
 
+/* Validate page */
+.source-doc {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--accent-color);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.source-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-color);
+  margin-bottom: 0.4rem;
+}
+
+.source-title {
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.35rem;
+}
+
+.source-authors {
+  font-size: 0.85rem;
+  color: var(--muted-color);
+  line-height: 1.5;
+}
+
+.source-doc .btn {
+  margin-top: 0.9rem;
+}
+
+.qa-block h3 {
+  font-size: 0.8rem;
+  color: var(--muted-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.verdict-options {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.verdict-option {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+}
+
+.verdict-option:hover {
+  border-color: var(--accent-color);
+}
+
+#opt-valid.selected {
+  border-color: var(--ok-color);
+}
+
+#opt-bad.selected {
+  border-color: var(--danger-color);
+}
+
+.verdict-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.verdict-desc {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted-color);
+  line-height: 1.4;
+}
+
 @media (max-width: 640px) {
-  .comparison {
+  .comparison,
+  .verdict-options {
     flex-direction: column;
   }
 }

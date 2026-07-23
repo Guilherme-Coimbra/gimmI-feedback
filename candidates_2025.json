@@ -1,0 +1,486 @@
+[
+  {
+    "id": "gen_0081",
+    "question": "We are seeing a significant reduction in hepatic infectivity with the PbCSPK-252/258-R mutant line of Plasmodium berghei, and our IFA data shows increased association of LC3 and LAMP1 with the parasitophorous vacuole membrane. Given that this phenotype is rescued by chloroquine, could you provide a detailed mechanistic explanation of how the loss of ubiquitylation at these specific C-terminal lysine residues leads to parasite elimination, and discuss how this relates to the general role of the ubiquitin-proteasome system (UPS) and macroautophagy in controlling intracellular pathogens?",
+    "gold_answer": "In the PbCSPK-252/258-R mutant line of Plasmodium berghei, the loss of ubiquitylation at lysine residues K252 and K258 in the C-terminal domain of the circumsporozoite protein (CSP) renders the parasite susceptible to host-mediated clearance. Mechanistically, the ubiquitylation of these residues normally serves as a protective strategy to evade the host's autophagic machinery. When these sites are mutated to arginine, there is a significant increase in the recruitment of the autophagy marker LC3 and the lysosomal membrane protein LAMP1 to the parasitophorous vacuole membrane (PVM), indicating that the parasites are targeted by an LC3-dependent, ubiquitin-independent autophagic pathway. This leads to the delivery of the parasite to lysosomes for degradation, a process blocked by chloroquine, which inhibits the interaction between autophagosomes and lysosomes. \n\nBroadly, this relates to the dual role of the ubiquitin-proteasome system (UPS) and macroautophagy in host defense. While the UPS typically targets polyubiquitylated proteins (often via K48-linked chains) for degradation by the 26S proteasome, ubiquitylation also acts as a critical signaling tag for selective autophagy. In the case of intracellular pathogens, the host often uses ubiquitin to mark the pathogen's vacuole for recognition by autophagy receptors (such as p62), which then recruit LC3 to facilitate the formation of the autophagosome. The PbCSPK-252/258-R data suggests a nuanced interaction where the parasite's own ubiquitylated CSP may act as a decoy or regulator to prevent the host from successfully deploying this autophagic clearance mechanism, thereby ensuring survival during the early liver stage of infection.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0129",
+    "question": "In our work with the PbCSPK-252/258-R transgenic Plasmodium berghei line, we observed that the loss of ubiquitylation at these specific C-terminal residues leads to increased recruitment of LC3 and LAMP1 to the parasitophorous vacuole membrane, resulting in parasite elimination. Given that this phenotype is rescued by chloroquine, how does this specific mechanism of evasion via CSP ubiquitylation compare to the known role of the UIS3 protein in modulating LC3 sequestration at the PVM, and what does this suggest about the redundancy or synergy of parasite strategies to avoid host autophagic clearance during the early liver stage?",
+    "gold_answer": "In the PbCSPK-252/258-R transgenic line, the ubiquitylation of CSP at residues K252 and K258 serves as a critical defense mechanism to prevent the recruitment of LC3 and LAMP1 to the parasitophorous vacuole membrane (PVM), thereby avoiding lysosomal degradation. This is evidenced by the fact that mutant parasites show significantly higher LC3 and LAMP1 signals and are eliminated unless the autophagy flux is blocked by chloroquine. This mechanism complements the role of the UIS3 protein, which is known to evade early elimination by sequestering LC3 at the PVM to prevent it from binding to other host autophagy targets. Together, these findings suggest a synergistic, multi-layered strategy where the parasite employs both protein-protein sequestration (via UIS3) and post-translational modifications of surface proteins (via CSP ubiquitylation) to neutralize the host's autophagic machinery. While UIS3 focuses on the sequestration of LC3, CSP ubiquitylation specifically prevents the transition to a degradative lysosomal state (LAMP1 association), ensuring the survival of the parasite during the critical first few hours of hepatic infection.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0288",
+    "question": "In the experiments using the PbCSPK-252/258-R transgenic line, what was the observed effect on the median fluorescence intensity of LC3 and LAMP1 at the parasitophorous vacuole membrane of infected primary hepatocytes at 4 hpi compared to the PbCSPControl line?",
+    "gold_answer": "The PbCSPK-252/258-R mutant parasites showed a significantly increased signal intensity, with LC3 being approximately 42% more intense and LAMP1 approximately 14% more intense relative to the PbCSPControl parasites.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0552",
+    "question": "In the EdU incorporation assay used to assess DNA replication in salivary gland sporozoites, what specific concentration of EdU was provided in the mosquito food, and over what duration were the infected Anopheles stephensi mosquitoes fed this solution?",
+    "gold_answer": "The infected Anopheles stephensi mosquitoes were fed a solution containing 200 \u00b5M EdU for a duration of either 48 hours or 72 hours prior to the collection of salivary glands for analysis.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0585",
+    "question": "In our Plasmodium berghei NK65 transgenic line PbCSPK-252/258-R, we observed a significant drop in liver stage infectivity at 4 hours post-infection, which was fully rescued by treating host hepatocytes with chloroquine. However, immunofluorescence showed that the accumulation of the autophagy receptor p62 on the parasitophorous vacuole membrane was unchanged compared to the control, while LC3 and LAMP1 signals were significantly increased. Given that p62 is the canonical cargo receptor for ubiquitin-dependent autophagy, how does the specific loss of ubiquitylation at CSP residues K252 and K258 trigger LC3-mediated clearance in the absence of p62 recruitment, and what does this imply about the ubiquitin chain topology or the specific autophagy pathway being engaged?",
+    "gold_answer": "The observation that the PbCSPK-252/258-R mutant parasites are cleared via an LC3- and LAMP1-dependent mechanism without increased p62 recruitment suggests that the clearance pathway is ubiquitin-independent or utilizes a non-canonical ubiquitin signal that does not engage p62. While p62 typically acts as the primary cargo receptor bridging polyubiquitylated substrates to LC3 in selective autophagy, the absence of p62 accumulation at the mutant parasitophorous vacuole membrane (PVM) indicates that the host cell is not recognizing a canonical polyubiquitin chain on the parasite surface via the p62-SQSTM1 pathway. Instead, the increased LC3 and LAMP1 signals imply that the loss of ubiquitylation at K252 and K258 may expose a distinct LC3-interacting region (LIR) motif on CSP or alter the membrane curvature in a way that recruits LC3 directly or via alternative receptors (such as NDP52 or optineurin) that do not strictly require p62. Alternatively, the ubiquitylation at these specific residues in the wild-type parasite might normally function to sequester or degrade LC3 itself, preventing its accumulation; thus, the mutant's lack of ubiquitylation fails to downregulate LC3, leading to its spontaneous accumulation and lysosomal fusion. The rescue by chloroquine, which blocks lysosomal acidification and autophagosome-lysosome fusion rather than upstream cargo recognition, confirms that the final execution step is lysosomal degradation, but the upstream trigger bypasses the canonical p62-dependent ubiquitin recognition step. This implies that the specific ubiquitin modification at K252/K258 serves a protective role not by marking the parasite for degradation, but potentially by preventing the exposure of a cryptic LC3-binding site or by actively interfering with the host's autophagic machinery through a decoy mechanism, rather than acting as a standard 'eat-me' signal.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0655",
+    "question": "In our Plasmodium berghei NK65 transgenic line PbCSPK-252/258-R, the early liver stage elimination phenotype is rescued by chloroquine; based on the specific lysine residues mutated in this line, what is the corresponding position of the second ubiquitylation site in the homologous Plasmodium berghei ANKA strain sequence?",
+    "gold_answer": "In the Plasmodium berghei NK65 strain used for the PbCSPK-252/258-R transgenic line, the two ubiquitylation sites are located at lysine residues 252 and 258. The homologous residues in the Plasmodium berghei ANKA strain, which were identified via mass spectrometry in heterologous expression systems, are located at positions 260 and 266. Therefore, the corresponding position of the second ubiquitylation site in the ANKA sequence is K266.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0826",
+    "question": "We are observing that our Plasmodium berghei NK65 transgenic line with the K252/258R mutations in the CSP C-terminus shows a significant reduction in liver-stage infectivity in C57BL/6J mice at 4 hours post-infection, correlating with increased LC3 and LAMP1 accumulation at the parasitophorous vacuole membrane. To determine if this clearance is strictly dependent on the host autophagy-lysosome fusion rather than just upstream autophagosome formation, I need to design a rescue experiment. Based on the mechanism of action of chloroquine as described in standard pharmacological literature, how would you design an in vivo treatment protocol for these mice to specifically test if blocking lysosomal acidification rescues the mutant phenotype, and what specific outcome in the liver parasite load at 4 hpi would confirm that the K252/258R mutant is indeed being cleared via an autophagic-lysosomal pathway?",
+    "gold_answer": "To test if the clearance of the Plasmodium berghei NK65 CSP K252/258R mutant is dependent on the lysosomal degradation step of autophagy, the rescue experiment should utilize chloroquine (CQ), a weak base that accumulates in acidic organelles like lysosomes and neutralizes their pH, thereby inhibiting the fusion of autophagosomes with lysosomes and blocking lysosomal proteolysis. Based on the experimental parameters established for this specific mutant, the in vivo protocol would involve treating C57BL/6J mice with an intraperitoneal injection of 100 \u03bcM chloroquine in 0.9% NaCl at two specific time points: 24 hours and 2 hours prior to the intravenous infection with 5 \u00d7 10\u00b3 sporozoites of the PbCSPK-252/258-R line. This pre-treatment ensures that the lysosomal machinery is inhibited at the time of parasite invasion and early establishment. The outcome confirming the hypothesis would be a statistical restoration of the hepatic parasite load in the chloroquine-treated mutant group to levels comparable to the untreated control group (PbCSPControl). Specifically, if the untreated K252/258R mutants typically show approximately a 50% reduction in liver load at 4 hours post-infection compared to controls, a successful rescue would manifest as the elimination of this difference, where the chloroquine-treated mutants exhibit infection loads indistinguishable from the control parasites, demonstrating that the loss of CSP ubiquitylation renders the parasite susceptible to clearance specifically via the autophagy-lysosome fusion and degradation pathway.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0858",
+    "question": "In the study of Plasmodium berghei sporozoites residing in Anopheles stephensi salivary glands, which specific thymidine kinase-expressing transgenic parasite line was utilized to assess DNA replication via EdU incorporation, and what was the exact concentration of EdU provided in the mosquito food source?",
+    "gold_answer": "The study utilized the P. berghei ANKA-GFP-TK transgenic parasite line, which expresses the thymidine kinase enzyme from Herpes simplex virus. The concentration of 5-ethynyl-2'-deoxyuridine (EdU) provided in the mosquito food source was 200 \u00b5M.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0867",
+    "question": "We are investigating the mechanism behind the reduced hepatic infectivity of our P. berghei NK65 PbCSPK-252/258-R mutant line. Specifically, I need a detailed breakdown of the immunofluorescence data comparing this mutant to the PbCSPControl line in C57BL/6 J primary hepatocytes at 4 hours post-infection. Which host autophagy and lysosomal markers showed significantly increased accumulation on the mutant parasitophorous vacuole membrane, what were the specific p-values and median intensity fold-changes reported for these markers, and how did the treatment with chloroquine in both ex vivo and in vivo models confirm that this accumulation drives the parasite elimination phenotype?",
+    "gold_answer": "In C57BL/6 J primary hepatocytes infected with the PbCSPK-252/258-R mutant compared to the PbCSPControl, immunofluorescence analysis at 4 hours post-infection revealed significantly increased accumulation of the autophagy marker LC3 and the lysosomal marker LAMP1 on the parasitophorous vacuole membrane. Specifically, the median intensity of the LC3 signal was approximately 42% more intense on the mutant parasites (p = 0.0030), and the LAMP1 signal was approximately 14% more intense (p = 0.0002). In contrast, no significant differences were observed in the fluorescence intensity or localization of ubiquitin or the cargo receptor p62 between the mutant and control lines. The causal link between this autophagic targeting and parasite elimination was confirmed through chloroquine (CLQ) treatment, a known inhibitor of lysosome-autophagosome interaction. In ex vivo experiments, pre-incubating primary hepatocytes with 100 \u03bcM CLQ rescued the infection load of the PbCSPK-252/258-R mutants, restoring it to levels comparable to the control parasites. This rescue effect was further validated in vivo, where intraperitoneal injection of CLQ (100 \u03bcM) into C57BL/6 J and BALB/cByJ mice 24 and 2 hours prior to infection significantly restored the hepatic infection load of the mutant line, demonstrating that the loss of CSP ubiquitylation at K252 and K258 renders the parasite susceptible to clearance by the host's lysosomal-autophagic machinery.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_0969",
+    "question": "In our recent study on Anopheles stephensi salivary glands infected with Plasmodium berghei, we identified a subset of sporozoite genes with rhythmic expression peaking early in the morning, including myosin A, TRSP, and microneme proteins like TRAP and AMA-1. Given that these specific motility factors are critical for the parasite's gliding motility and hepatocyte invasion, how does this transcriptional priming align with the known mechanisms of apicomplexan gliding motility and the timing of Anopheles feeding behavior to maximize transmission efficiency?",
+    "gold_answer": "The rhythmic transcription of motility-associated genes in Plasmodium berghei sporozoites, such as myosin A, thrombospondin-related sporozoite protein (TRSP), TRAP, and AMA-1, represents a strategic transcriptional priming mechanism that aligns with the nocturnal feeding behavior of the Anopheles stephensi vector. In apicomplexan parasites, gliding motility is an actin-myosin motor-driven process where the myosin A heavy chain interacts with the actin filament to generate force, while the TRAP family of proteins (including TRSP) anchored in the microneme are translocated to the posterior of the parasite to mediate traction on the substrate. The observation that these genes peak in expression early in the morning (approximately ZT0-ZT4) suggests that sporozoites are synthesizing the necessary mRNA transcripts in anticipation of the vector's peak feeding activity, which occurs at night (ZT16). Although there is typically a delay between transcription and protein accumulation in malaria parasites, the presence of these transcripts during the subjective day ensures that the protein machinery required for rapid cell traversal and hepatocyte invasion is available or upregulated just as the mosquito seeks a bloodmeal. This temporal coordination maximizes transmission efficiency by ensuring that the parasite is mechanically 'poised' to initiate infection immediately upon deposition into the host skin, leveraging the vector's circadian-driven biting rhythm to synchronize with the host encounter.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_1095",
+    "question": "In the DNA replication analysis using the P. berghei ANKA-GFP-TK parasite line, what was the specific concentration of EdU provided in the mosquito food, and what were the exact collection timepoints (in ZT) for the salivary glands over the 48-hour monitoring window on days 22\u201324 post-bloodmeal?",
+    "gold_answer": "The specific concentration of EdU provided in the mosquito food was 200 \u00b5M. The salivary glands were collected every 6 hours over a 48-hour window on days 22\u201324 post-bloodmeal. The exact collection timepoints used were ZT0 (at lights on), ZT6, ZT12 (at lights off), and ZT18.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_1137",
+    "question": "In the DNA replication analysis using the P. berghei ANKA-GFP-TK line and EdU incorporation, what was the specific final concentration of the Click-iT reaction mix components (specifically the fluorescent azide and Cu(I) catalyst) added to the sporozoites, and what was the exact incubation time for this labeling step as performed in our protocol?",
+    "gold_answer": null,
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_1272",
+    "question": "In the in vivo autophagy inhibition experiments using C57BL/6J mice to rescue the PbCSPK-252/258-R mutant phenotype, what specific concentration of chloroquine was administered via intraperitoneal injection, and at which two precise time points relative to sporozoite infection were these treatments given?",
+    "gold_answer": "The mice were treated with 100 \u03bcM chloroquine, administered via intraperitoneal injection at 24 hours and 2 hours prior to sporozoite infection.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_1765",
+    "question": "In the study of Plasmodium berghei CSP ubiquitylation, what specific lysine residues were mutated to arginine in the NK65 strain to generate the transgenic line that exhibited reduced hepatic infectivity, and which host autophagy markers showed significantly increased accumulation on the parasitophorous vacuole membrane of these mutant parasites at 4 hours post-infection?",
+    "gold_answer": "The specific lysine residues mutated to arginine in the Plasmodium berghei NK65 strain were K252 and K258, generating the PbCSPK-252/258-R transgenic line. In hepatocytes infected with these mutant parasites at 4 hours post-infection, the host autophagy markers LC3 (microtubule-associated protein 1 light chain 3) and LAMP1 (lysosomal-associated membrane protein 1) showed significantly increased accumulation on the parasitophorous vacuole membrane compared to control parasites.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_1851",
+    "question": "In the DNA replication analysis of Plasmodium berghei ANKA sporozoites residing in Anopheles stephensi salivary glands, what specific transgenic modification was engineered into the parasite line to enable detection, what synthetic nucleoside analogue was administered via the mosquito diet, and what were the precise fixation, permeabilization, and immunostaining conditions used to visualize DNA synthesis in the sporozoites versus the positive control oocysts?",
+    "gold_answer": "The study utilized a transgenic Plasmodium berghei ANKA line (Pb-GFP-TK) engineered to express the thymidine kinase enzyme from Herpes simplex virus, allowing for the incorporation of the synthetic nucleoside analogue 5-ethynyl-2\u2032-deoxyuridine (EdU) into newly synthesized DNA. Infected mosquitoes were fed 200 \u00b5M EdU in their food for 48 to 72 hours. For the sporozoite analysis, salivary glands were dissected, ground, and filtered to release sporozoites, which were then fixed for 10 minutes with 4% paraformaldehyde, washed twice in 3% bovine serum albumin (BSA), and permeabilized for 20 minutes in 0.5% Triton X-100 in phosphate-buffered saline (PBS). Following permeabilization, samples were washed again in 3% BSA and subjected to the Click-iT chemistry protocol to label incorporated EdU, followed by overnight incubation at 4\u00b0C with anti-UIS4 primary antibody (1:500 dilution). Secondary antibodies used were anti-GFP rabbit polyclonal conjugated to Alexa Fluor 488 and donkey anti-goat Alexa Fluor 568 (both at 1:1,000 dilution), with nuclei stained using Hoechst 33342 (1:1,000). For the positive control using actively dividing oocysts, midguts were dissected on days 13\u201314 post-bloodmeal and fixed for 20 minutes at room temperature with 4% paraformaldehyde. These were permeabilized for 1 hour in 0.5% Triton X-100 in 3% BSA, subjected to Click-iT chemistry for 30 minutes at room temperature, and then stained overnight at 4\u00b0C with anti-P. berghei HSP70 (2E6, 1:300) followed by anti-GFP rabbit polyclonal (Alexa Fluor 488) and goat anti-mouse (Alexa Fluor 647) secondary antibodies (both 1:1,000), with Hoechst 33342 used for nuclear counterstaining.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_2436",
+    "question": "In the mass spectrometry analysis of Plasmodium berghei ANKA CSP ubiquitylation performed in HEK 293T cells, which specific peptide containing a di-glycine remnant was identified when immunoprecipitation was carried out using Protein A/G-plus agarose beads cross-linked to the anti-HA high-affinity rat monoclonal antibody?",
+    "gold_answer": "Peptide P2 was identified using Protein A/G-plus agarose beads cross-linked to the anti-HA high-affinity rat monoclonal antibody. This peptide contained the di-glycine remnant modification at the lysine residue corresponding to K266 in the ANKA strain sequence.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_2928",
+    "question": "In the study characterizing the circadian transcriptome of Anopheles stephensi salivary glands infected with Plasmodium berghei ANKA, what specific statistical threshold was applied to the false discovery rate (FDR)-adjusted P value to confirm that a gene exhibited significant circadian cycling when using the MetaCycle package?",
+    "gold_answer": "The study required that a gene be detected as having significant periodic expression by at least two of the four algorithms in the MetaCycle package with a P value \u2264 0.05, and additionally, that in at least one of those algorithms, the false discovery rate (FDR)-adjusted P value was \u2264 0.05.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_3231",
+    "question": "In the context of the PbCSPK-252/258-R mutant Plasmodium berghei NK65 line, what is the specific mechanism by which the loss of ubiquitylation at these residues leads to parasite elimination during the early liver stage, and how was this mechanism experimentally validated both in primary hepatocyte cultures and in vivo using C57BL/6J and BALB/cByJ mice? Please detail the specific host markers observed, the statistical significance of their accumulation, and the precise dosing and timing of the chemical intervention used to rescue the mutant phenotype.",
+    "gold_answer": "The loss of ubiquitylation at lysine residues K252 and K258 in the C-terminal domain of Plasmodium berghei CSP renders the parasite susceptible to elimination by the host's autophagic machinery, specifically via an LC3-dependent but p62-independent pathway that converges on lysosomal degradation. This mechanism was established by observing that, unlike the control PbCSPControl line, the PbCSPK-252/258-R mutants exhibited a significant accumulation of the autophagy marker LC3 and the lysosomal marker LAMP1 on the parasitophorous vacuole membrane (PVM) at 4 hours post-infection (hpi). Quantitative immunofluorescence analysis revealed that the median LC3 signal intensity was approximately 42% higher on the mutant parasites (p < 0.001) and the LAMP1 signal was approximately 14% higher (p < 0.001) compared to controls, while no significant differences were observed in the localization or intensity of ubiquitin or the cargo receptor p62. This accumulation correlated with a drastic reduction in hepatic infection load, with mutant parasite numbers dropping to approximately half of the control levels at both 4 hpi and 44 hpi in both ex vivo primary hepatocyte cultures and in vivo mouse models. The causal link to autophagy was validated by rescuing the mutant phenotype through the inhibition of lysosomal acidification and autophagosome-lysosome fusion using chloroquine. In primary hepatocyte experiments, cells were pre-treated with 100 \u03bcM chloroquine for 4 hours prior to infection, and the drug was reintroduced at 2 hours post-infection for an additional 2 hours, which fully restored infection loads of the PbCSPK-252/258-R parasites to control levels. In vivo validation involved intraperitoneal injection of 100 \u03bcM chloroquine in 0.9% NaCl into both C57BL/6J and BALB/cByJ mice at 24 hours and 2 hours prior to sporozoite infection; this treatment similarly rescued the hepatic infection load of the mutant parasites, confirming that the elimination of the K252/258-R mutant is driven by host autophagy and lysosomal activity.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_3456",
+    "question": "In the generation of the PbCSPK-252/258-R transgenic parasite line, which specific restriction enzyme was used to linearize the pPbCSPK-252/258-R plasmid prior to electroporation into the GFP-PbWT(ANKA) merozoites?",
+    "gold_answer": "HindIII",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_3574",
+    "question": "We are designing a rescue experiment for the Plasmodium berghei NK65 PbCSPK-252/258-R line, which shows increased susceptibility to host autophagy due to the loss of CSP ubiquitylation at lysines 252 and 258. Based on the in vivo findings where chloroquine (CLQ) restored infection loads in C57BL/6 J mice, what is the precise pharmacokinetic half-life of chloroquine in the murine liver tissue at the 100 \u03bcM concentration used in the study, and how does this half-life compare to the standard half-life of chloroquine in human hepatocytes to determine if our 2-hour pre-treatment window is sufficient for sustained lysosomal inhibition during the critical 4-hour post-infection clearance window?",
+    "gold_answer": null,
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_3690",
+    "question": "In the study of Plasmodium berghei sporozoites within Anopheles stephensi salivary glands, what specific nucleoside analogue was incorporated into the parasite DNA to assess replication, and which exogenous enzyme was engineered into the P. berghei ANKA clone 440cl1 line to enable this specific labeling?",
+    "gold_answer": "The study utilized 5-ethynyl-2\u2032-deoxyuridine (EdU) as the nucleoside analogue to assess DNA replication. To enable the incorporation of EdU, the P. berghei ANKA clone 440cl1 line was genetically engineered to express the thymidine kinase (TK) enzyme from Herpes simplex virus.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_3744",
+    "question": "In the DNA replication analysis using the P. berghei ANKA-GFP-TK parasite line, what specific concentration of the synthetic nucleoside analogue EdU was included in the mosquito food, and over what duration were the infected mosquitoes fed this mixture prior to salivary gland collection?",
+    "gold_answer": "The infected mosquitoes were fed a concentration of 200 \u00b5M EdU in their food for a duration of either 48 hours or 72 hours prior to the collection of salivary glands for analysis.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_3933",
+    "question": "We are observing a discrepancy between the peak mRNA expression of the circumsporozoite protein (CSP) in our Plasmodium berghei sporozoites dissected from Anopheles stephensi salivary glands at ZT4 and the expected peak of functional sporozoite motility in the mammalian host. Given that our RNA-seq data shows CSP transcription peaks early in the subjective day (0\u20134 h after lights on), but transmission is most efficient at night, how does the known translational delay in Plasmodium biology reconcile this transcriptional rhythm with the timing of effective infection, and what specific evidence from our proteomic cross-referencing supports the hypothesis that these rhythmic transcripts are indeed translated into functional proteins within the salivary gland stage?",
+    "gold_answer": "The apparent discrepancy between the early morning peak of CSP mRNA transcription and the nighttime peak of transmission efficiency is reconciled by the well-documented translational delay in Plasmodium biology, where protein expression typically lags behind mRNA peaks by approximately 11 hours or more. While our transcriptomic data confirms that CSP and other motility-associated genes (such as TRAP and myosin A) exhibit cyclic expression peaking between ZT0 and ZT4, the functional protein levels required for gliding motility and host invasion would consequently peak later in the cycle, aligning with the mosquito's nocturnal feeding behavior (around ZT16). Our study provides direct evidence that this transcriptional rhythm translates to the protein level within the salivary gland stage by cross-referencing our cycling mRNA dataset with established sporozoite proteomic data (specifically the Lindner 2013 dataset). This analysis revealed that approximately one-third of the genes cycling at the mRNA level, including critical motility factors like myosin A, myosin B, myosin F, TRAP-like proteins, and AMA-1, are also detected as expressed proteins in the salivary gland sporozoites. This confirms that the rhythmic transcription is not merely a regulatory artifact but drives the synthesis of functional proteins that prime the sporozoites for the predictable nighttime encounter with the mammalian host, ensuring that the peak of motility machinery availability coincides with the vector's feeding time.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_4060",
+    "question": "I am planning a comparative analysis of early liver-stage elimination in Plasmodium berghei using our two transgenic lines, PbCSPControl and the PbCSPK-252/258-R mutant. Could you outline the specific experimental evidence that links the loss of CSP ubiquitylation in the mutant to autophagy-mediated clearance, including the specific host markers that showed increased accumulation on the parasitophorous vacuole membrane, the statistical significance of these findings, and the precise concentration and timing of the rescue agent used in both ex vivo primary hepatocyte cultures and in vivo mouse models (both C57BL/6J and BALB/cByJ strains) to reverse this phenotype?",
+    "gold_answer": "The evidence linking the loss of CSP ubiquitylation in the PbCSPK-252/258-R mutant to autophagy-mediated clearance is established through immunofluorescence analysis of mouse primary hepatocytes at 4 hours post-infection (hpi), which revealed a statistically significant increase in the accumulation of specific host autophagy and lysosomal markers on the parasitophorous vacuole membrane (PVM) of the mutant compared to the PbCSPControl. Specifically, the microtubule-associated protein 1 light chain 3 (LC3) showed approximately 42% higher median fluorescence intensity in the mutant (p = 0.0030), and the lysosomal-associated membrane protein 1 (LAMP1) showed approximately 14% higher intensity (p = 0.0002). This increased targeting correlates with a significant reduction in parasite load in both ex vivo and in vivo settings. To rescue this phenotype, chloroquine (CLQ) was used to inhibit the autophagy-lysosome interaction. In ex vivo experiments using primary hepatocytes from C57BL/6J mice, cells were pre-treated with 100 \u03bcM chloroquine for 4 hours prior to infection, followed by a wash and incubation in 100 \u03bcM chloroquine for an additional 2 hours post-infection, which restored infection loads to control levels. In vivo, the rescue was confirmed in both C57BL/6J and BALB/cByJ mice by administering 200 \u03bcL of 100 \u03bcM chloroquine via intraperitoneal injection at 24 hours and 2 hours prior to sporozoite infection, which similarly reversed the reduction in hepatic infection load observed in the mutant line at 4 hpi.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_4144",
+    "question": "We are planning a rescue experiment for our Plasmodium berghei NK65 transgenic line where CSP lysines 252 and 258 are mutated to arginines (PbCSPK-252/258-R), which we know are cleared early by host autophagy. To replicate the successful in vivo rescue described in the literature using C57BL/6J mice, I need the exact dosing regimen and timing for the autophagy inhibitor chloroquine relative to the sporozoite challenge, and I also need to know the specific statistical test used to determine the significance of the rescue effect in that study.",
+    "gold_answer": "To rescue the PbCSPK-252/258-R mutant phenotype in C57BL/6J mice, chloroquine must be administered via intraperitoneal injection at a concentration of 100 \u03bcM in 0.9% NaCl. The specific dosing regimen requires two injections: one 24 hours prior to sporozoite infection and a second 2 hours prior to infection. Following the intravenous challenge with 5 \u00d7 10\u00b3 sporozoites, hepatic infection load is assessed at 4 hours post-infection. The statistical significance of the rescue effect, comparing the infection loads of treated versus mock-treated groups, was determined using the Two-tailed Mann\u2013Whitney U test.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_4240",
+    "question": "In our comparative analysis of Plasmodium berghei liver stage evasion mechanisms, we need to reconcile the specific host machinery interactions with the phenotypic rescue strategies. First, identify the specific host E3 ligase family and the precise lysine residues on the CSP of the NK65 strain that are required to prevent early parasite clearance. Second, contrast the molecular phenotype observed in the mutant parasites lacking these residues with the specific pharmacological agent and its mechanism of action that was used to fully rescue the infection load in both ex vivo primary hepatocyte cultures and in vivo mouse models. Finally, explicitly state which autophagy and lysosomal markers showed increased accumulation at the parasitophorous vacuole membrane in the mutant line that led to this clearance.",
+    "gold_answer": "The study identifies that host Cullin RING Ligases (CRLs), specifically involving Cullin 1 (CUL1), ubiquitylate the Plasmodium berghei circumsporozoite protein (CSP). In the NK65 strain, the critical residues required for this modification and subsequent parasite survival are lysines 252 and 258 (K252 and K258) located in the C-terminal domain. Mutant parasites lacking these residues (PbCSPK-252/258-R) exhibit a molecular phenotype characterized by a significant reduction in CSP ubiquitylation, which renders them susceptible to host clearance. This susceptibility is marked by a substantial increase in the accumulation of the autophagy marker LC3 (approximately 42% higher signal intensity) and the lysosomal marker LAMP1 (approximately 14% higher signal intensity) at the parasitophorous vacuole membrane compared to control parasites. To rescue the infection load of these mutant parasites, the study utilized Chloroquine (CLQ). Chloroquine acts as an autophagy inhibitor by disrupting the lysosome-autophagosome interaction, thereby preventing the lysosomal degradation of the parasite. Treatment with Chloroquine fully restored the hepatic infection levels of the PbCSPK-252/258-R mutant to those of the control line in both ex vivo mouse primary hepatocyte cultures and in vivo C57BL/6J and BALB/cByJ mouse models, confirming that the clearance mechanism is dependent on the autophagy-lysosome pathway.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_4296",
+    "question": "In the proteomics workflow for the Anopheles stephensi salivary gland samples, the study utilized the Fragpipe 20.0 software for searching the raw LC\u2013MS/MS data. What specific version of the MSstats R package was used for the downstream normalization and significance testing of the MSstats.csv output?",
+    "gold_answer": null,
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_4359",
+    "question": "We are investigating the molecular mechanism behind the reduced infectivity of our PbCSPK-252/258-R transgenic line in the early liver stage. Could you detail the specific experimental evidence that links the loss of ubiquitylation at these residues to host autophagy-mediated clearance? I need a breakdown of the immunofluorescence results comparing the localization and intensity of autophagy and lysosomal markers on the mutant versus the control parasites, and how the pharmacological rescue experiment using chloroquine confirmed this specific pathway in both primary hepatocytes and in vivo mouse models.",
+    "gold_answer": "The reduced infectivity of the PbCSPK-252/258-R transgenic line is linked to host autophagy-mediated clearance through a series of specific experimental observations. First, immunofluorescence analysis of early exoerythrocytic forms in mouse primary hepatocytes at 4 hours post-infection (hpi) revealed that while overall ubiquitin and p62 levels remained unchanged on the parasitophorous vacuole membrane (PVM), the mutant parasites exhibited significantly higher accumulation of autophagy and lysosomal markers compared to the PbCSPControl line. Specifically, the mean fluorescence intensity of LC3 (microtubule-associated protein 1 light chain 3) was approximately 42% higher on the mutant parasites (p = 0.0030), and the signal for LAMP1 (lysosomal-associated membrane protein 1) was roughly 14% more intense (p = 0.0002), indicating increased targeting by the host's autophagic and lysosomal machinery. To confirm that this accumulation directly caused the parasite elimination, a rescue experiment was performed using chloroquine (CLQ), a known inhibitor of lysosome-autophagosome interaction. In ex vivo assays, pre-treating primary hepatocytes with 100 \u03bcM chloroquine fully rescued the infection load of the PbCSPK-252/258-R mutants, restoring parasite numbers to levels comparable to the control line at 4 hpi. This rescue effect was further validated in vivo: when C57BL/6J and BALB/cByJ mice were treated with chloroquine intraperitoneally 24 and 2 hours prior to sporozoite infection, the hepatic infection load of the mutant parasites was significantly restored at 4 hpi, demonstrating that the loss of CSP ubiquitylation at K252 and K258 renders the parasite susceptible to elimination specifically via the host's autophagic-lysosomal pathway.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_4821",
+    "question": "In our recent analysis of the Plasmodium berghei NK65 transgenic line PbCSPK-252/258-R, we observed a significant reduction in hepatic infection load at 4 hours post-infection, correlating with increased recruitment of LC3 and LAMP1 to the parasitophorous vacuole membrane. While our data suggests this phenotype is rescued by chloroquine treatment, I need a comprehensive mechanistic interpretation of these findings. Please synthesize our specific observations regarding the K252/K258 lysine mutations with the established molecular biology of selective autophagy and lysosomal acidification to explain: 1) The precise role of ubiquitylation at these specific CSP residues in evading host clearance; 2) The exact mechanism by which chloroquine rescues the mutant phenotype, specifically addressing its impact on the pH-dependent maturation of autolysosomes versus its potential effects on autophagosome formation; and 3) Why the lack of ubiquitylation at these sites specifically sensitizes the parasite to LC3-dependent autophagy rather than triggering proteasomal degradation, considering the known functions of the K48-linked ubiquitin chains versus other ubiquitin signaling motifs.",
+    "gold_answer": "The observed phenotype in the PbCSPK-252/258-R mutant line, characterized by reduced hepatic survival and increased accumulation of the autophagy marker LC3 and lysosomal marker LAMP1, indicates that ubiquitylation at lysine residues 252 and 258 of the circumsporozoite protein (CSP) acts as a critical evasion mechanism against host autophagy rather than a signal for proteasomal degradation. Unlike the canonical K48-linked polyubiquitin chains that target proteins for proteasomal destruction, the ubiquitylation at these specific CSP residues likely functions as a non-degradative signal or a decoy mechanism. In the context of selective autophagy, the host cell recognizes the lack of these specific ubiquitin tags on the parasite surface or the parasitophorous vacuole membrane (PVM) as a failure to suppress autophagic recognition, leading to the recruitment of LC3 and subsequent delivery to lysosomes. This suggests that wild-type CSP ubiquitylation at K252 and K258 normally interferes with the recruitment of autophagy machinery, possibly by sequestering ubiquitin ligases or preventing the binding of autophagy receptors like p62 to the PVM, thereby shielding the parasite from clearance.\n\nThe rescue of the PbCSPK-252/258-R mutant phenotype by chloroquine (CLQ) is mechanistically consistent with the drug's established role as an autophagy inhibitor that acts downstream of autophagosome formation. Chloroquine is a weak base that accumulates in acidic compartments, such as lysosomes and autolysosomes, where it raises the intralysosomal pH. This alkalinization inhibits the activity of lysosomal hydrolases (cathepsins and other proteases) which require an acidic environment to function. Consequently, while the mutant parasites are successfully targeted by LC3 and delivered to lysosomes (as evidenced by LAMP1 accumulation), the subsequent degradation step is blocked because the lysosomal enzymes cannot function in the neutralized pH. This prevents the destruction of the parasite, allowing it to survive despite the increased autophagic targeting. Chloroquine does not prevent the initial formation of autophagosomes or the recruitment of LC3; rather, it disrupts the fusion of autophagosomes with lysosomes or the maturation of the autolysosome, effectively creating a 'dead end' for the autophagic flux. Therefore, the survival of the mutant in the presence of chloroquine confirms that the primary cause of parasite elimination in this context is lysosomal degradation following autophagic sequestration, and that the K252/K258 ubiquitylation is essential for preventing the initial initiation of this specific clearance pathway.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5011",
+    "question": "In our Plasmodium berghei NK65 strain, the K252/K258-to-arginine mutation in the CSP C-terminus triggers host autophagic elimination, whereas in Plasmodium falciparum, the glycosylation of CSP at Threonine 337 is essential for mosquito salivary gland colonization. If we were to introduce the P. falciparum T337 glycosylation site into the P. berghei NK65 K252/258R mutant, would the resulting hybrid parasite likely survive the early liver stage in a C57BL/6J mouse, assuming the glycosylation does not structurally interfere with the exposed K-mutated surface?",
+    "gold_answer": "The hybrid parasite would likely still be eliminated during the early liver stage. The provided experimental data establishes that the K252/K258 ubiquitylation defect in the P. berghei NK65 mutant renders the parasite susceptible to host autophagy, characterized by increased LC3 and LAMP1 recruitment to the parasitophorous vacuole membrane, a phenotype that is only rescued by inhibiting lysosomal function with chloroquine. External literature confirms that P. falciparum CSP glycosylation at T337 is a post-translational modification specifically required for interactions within the mosquito vector (salivary gland colonization) and sporozoite motility, not for the evasion of mammalian hepatic autophagy. Since the mechanism of clearance in the P. berghei liver stage is driven by the lack of ubiquitylation at K252/K258 and not by a defect in mosquito-stage colonization factors, adding the T337 glycosylation site would not compensate for the loss of the specific ubiquitylation-based evasion mechanism required for survival in hepatocytes.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5178",
+    "question": "In our experiments infecting C57BL/6J mouse primary hepatocytes with the PbCSPK-252/258-R transgenic Plasmodium berghei line, we observed a significant reduction in parasite load at 4 hours post-infection. Based on the rescue experiment described in our protocol, which specific pharmacological agent and concentration were used to inhibit the host autophagy-lysosome pathway and restore the mutant parasite burden to control levels?",
+    "gold_answer": "The specific agent used to rescue the phenotype of the PbCSPK-252/258-R mutant parasites was chloroquine (CLQ) at a concentration of 100 \u03bcM. This treatment effectively blocked the autophagy flux in the host hepatocytes, restoring the infection load of the lysine-mutant parasites to levels comparable to the control line.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5448",
+    "question": "In the DNA replication analysis using the P. berghei ANKA-GFP-TK parasite line in Anopheles stephensi salivary glands, what specific concentration of the synthetic nucleoside analogue 5-ethynyl-2\u2032-deoxyuridine (EdU) was included in the mosquito diet to detect newly synthesized DNA?",
+    "gold_answer": "The concentration of the synthetic nucleoside analogue 5-ethynyl-2\u2032-deoxyuridine (EdU) included in the food of the infected Anopheles stephensi mosquitos was 200 \u00b5M.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5461",
+    "question": "In the P. berghei NK65 PbCSPK-252/258-R mutant line, which two specific lysine residues in the C-terminal domain were mutated to arginine, and what was the specific chloroquine concentration used to rescue the infection load defect in primary hepatocytes from C57BL/6 J mice?",
+    "gold_answer": "The two lysine residues mutated to arginine in the P. berghei NK65 CSP C-terminal domain are K252 and K258. The specific concentration of chloroquine used to rescue the infection load defect in primary hepatocytes from C57BL/6 J mice was 100 \u03bcM.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5515",
+    "question": "In our Plasmodium berghei NK65-based transgenic line lacking K252/K258 ubiquitylation sites on CSP, we observed that the mutant parasites are eliminated 4 hours post-infection in mouse hepatocytes, a phenotype fully rescued by treating the host cells with 100 \u03bcM chloroquine. Given that our rescue agent targets lysosomal acidification rather than autophagosome formation, what is the specific canonical cellular mechanism that chloroquine disrupts to prevent the degradation of these mutant parasites, and why does this specific inhibition rescue the phenotype despite the mutants showing normal early invasion rates?",
+    "gold_answer": "The specific mechanism chloroquine disrupts is the acidification of lysosomes, which prevents the fusion of autophagosomes with lysosomes and blocks the activity of lysosomal hydrolases required for cargo degradation. In the context of the P. berghei NK65 PbCSPK-252/258-R mutant, the loss of ubiquitylation at CSP residues K252 and K258 renders the parasites susceptible to host autophagy, evidenced by increased recruitment of the autophagy marker LC3 and the lysosomal marker LAMP1 to the parasitophorous vacuole membrane. Because these mutants are eliminated via an autophagy-dependent pathway that requires lysosomal fusion for final degradation, inhibiting lysosomal acidification with chloroquine arrests the process, allowing the parasites to survive despite their inability to evade the initial autophagic targeting. This rescue occurs because the defect lies in the evasion of post-invasion clearance, not in the invasion process itself, as the mutant sporozoites exhibit normal gliding motility and hepatocyte invasion rates comparable to the control line.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5634",
+    "question": "In the study of Plasmodium berghei sporozoite rhythms within Anopheles stephensi salivary glands, what specific concentration of the synthetic nucleoside analogue EdU was administered in the mosquito food to assess DNA replication via the Pb-GFP-TK transgenic line?",
+    "gold_answer": "The concentration of 5-ethynyl-2\u2032-deoxyuridine (EdU) administered in the food of the infected Anopheles stephensi mosquitoes was 200 \u00b5M. This concentration was used to label newly synthesized DNA in the Pb-GFP-TK parasite line to assess DNA replication in salivary gland sporozoites.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_5766",
+    "question": "In the experiment measuring haemoglobin levels in Anopheles stephensi midguts to quantify blood intake at ZT4 versus ZT16, which specific non-parametric statistical test was used to determine the significance of the difference between the two timepoints?",
+    "gold_answer": "The Mann\u2013Whitney test was used to determine the statistical significance of the difference in haemoglobin levels between the ZT4 and ZT16 timepoints.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_6033",
+    "question": "Our lab recently sequenced the transcriptome of Plasmodium berghei sporozoites residing in Anopheles stephensi salivary glands every 4 hours over 72 hours under both light/dark and constant dark conditions. We identified a robust subset of cycling genes enriched for microneme and plasma membrane functions, including TRAP, AMA1, and CSP, with peak expression occurring between ZT0 and ZT4. Given that standard malaria vaccine candidates like RTS,S target the circumsporozoite protein (CSP) and rely on its antigenicity for neutralizing antibodies, how should we interpret the biological significance of this specific circadian expression window for CSP and other motility genes in the context of transmission-blocking vaccine efficacy, particularly considering the delay often observed between mRNA transcription and protein abundance in Apicomplexa?",
+    "gold_answer": "The observation that CSP, TRAP, and other microneme-associated genes in P. berghei sporozoites peak in expression between ZT0 and ZT4 (early subjective day) suggests a strategic priming of the parasite for transmission, which coincides with the nocturnal feeding behavior of Anopheles stephensi (typically active around ZT16-ZT24). While the mRNA for these critical invasion and motility proteins peaks in the early morning, the well-documented 11-hour or greater lag between mRNA transcription and protein accumulation in malaria parasites implies that the functional pool of CSP and TRAP proteins likely reaches its maximum abundance during the mosquito's active feeding window at night. This temporal alignment indicates that sporozoites are not transcriptionally quiescent but are dynamically regulating their invasive machinery to be fully equipped precisely when they are most likely to be injected into a host. For transmission-blocking vaccines like RTS,S, which target CSP, this rhythmicity implies that the antigenic landscape of the sporozoite is not static; the parasite presents its highest density of the target antigen specifically during the transmission event. Consequently, vaccine-induced antibodies must be capable of neutralizing parasites at this peak protein expression window to effectively block infection. Furthermore, the cyclic nature of these genes suggests that disrupting the synchronization between the mosquito vector's circadian clock and the parasite's gene regulation could be a novel therapeutic strategy, potentially desynchronizing the parasite's protein production from the mosquito's biting time and thereby reducing transmission efficiency.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_6123",
+    "question": "We are troubleshooting the reduced hepatic infectivity of our PbCSPK-252/258-R Plasmodium berghei NK65 transgenic line. The sporozoites are invading hepatocytes at normal rates, but the parasite load drops significantly by 4 hours post-infection. Based on our mechanistic studies, what specific host autophagy and lysosomal markers accumulate on the parasitophorous vacuole membrane of these mutant parasites compared to the control, and what specific chemical inhibitor and treatment regimen were used in vivo to rescue this elimination phenotype?",
+    "gold_answer": "The reduced infectivity of the PbCSPK-252/258-R mutant parasites is associated with the accumulation of the autophagy marker microtubule-associated protein 1 light chain 3 (LC3) and the lysosomal marker lysosomal-associated membrane protein 1 (LAMP1) on the parasitophorous vacuole membrane. Specifically, immunofluorescence analysis of infected primary hepatocytes at 4 hours post-infection revealed that the median LC3 signal intensity was approximately 42% higher on the mutant parasites compared to the control, while the LAMP1 signal was approximately 14% higher. This increased accumulation indicates that the loss of ubiquitylation at residues K252 and K258 renders the parasites susceptible to host autophagic and lysosomal clearance. To rescue this phenotype in vivo, mice were treated with chloroquine (CLQ), a lysosomotropic agent that inhibits autophagy flux. The specific rescue regimen involved administering chloroquine via intraperitoneal injection at a concentration of 100 \u03bcM, with doses given at 24 hours and 2 hours prior to sporozoite infection. This treatment successfully restored the hepatic infection load of the PbCSPK-252/258-R mutants to levels comparable to the control line in both C57BL/6J and BALB/cByJ mouse strains.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_6189",
+    "question": "In the study characterizing the circadian rhythms of Anopheles stephensi salivary glands infected with Plasmodium berghei ANKA, the authors utilized a double-homologous recombination strategy to generate the thymidine kinase-expressing transgenic line (Pb-GFP-TK) for EdU incorporation assays. While the text details the selection antibiotic concentration and the general transfection method, it does not specify the exact number of days required for the pyrimethamine selection process to generate the stable, clonal parasite population before genomic verification by PCR.",
+    "gold_answer": null,
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_6543",
+    "question": "In the study of Plasmodium berghei NK65 liver stage infection, we generated a transgenic line designated PbCSPK-252/258-R where the lysine residues at positions 252 and 258 of the Circumsporozoite Protein (CSP) were mutated to arginine. When this mutant line was compared to the PbCSPControl line in primary hepatocytes from C57BL/6J mice, the mutant showed a significant reduction in parasite load at 4 and 44 hours post-infection. Could you walk me through the specific immunofluorescence evidence regarding the host autophagy machinery recruitment to the parasitophorous vacuole membrane (PVM) that explains this phenotype, and detail the precise experimental conditions used to demonstrate that this elimination mechanism is dependent on lysosomal activity?",
+    "gold_answer": "The reduced infectivity of the PbCSPK-252/258-R mutant line is mechanistically linked to its increased susceptibility to host autophagy-mediated clearance, as evidenced by specific immunofluorescence (IFA) assays performed on primary hepatocytes from C57BL/6J mice at 4 hours post-infection (hpi). While the overall ubiquitin signal at the parasitophorous vacuole membrane (PVM) and the recruitment of the cargo receptor p62 showed no significant difference between the mutant and the PbCSPControl parasites, the mutant exhibited a marked increase in the recruitment of autophagy and lysosomal markers. Specifically, the mean fluorescence intensity of microtubule-associated protein 1 light chain 3 (LC3) at the PVM was approximately 42% higher in PbCSPK-252/258-R parasites compared to controls (p < 0.001), and the lysosomal-associated membrane protein 1 (LAMP1) signal was approximately 14% more intense (p < 0.001). This accumulation suggests that the loss of CSP ubiquitylation at K252 and K258 renders the parasite more visible to the LC3-dependent autophagy machinery and promotes lysosomal targeting. To confirm that this clearance is dependent on lysosomal activity, the researchers performed a rescue experiment using Chloroquine (CLQ), a lysosomotropic agent that inhibits autophagy flux. In the ex vivo model, primary hepatocytes were pre-incubated with 100 \u03bcM Chloroquine for 4 hours prior to infection. Following infection with either control or mutant sporozoites, the medium was replaced with Chloroquine-free medium for 2 hours, then Chloroquine was re-added for an additional 2 hours post-infection. Under these conditions, the infection load of the PbCSPK-252/258-R mutant was fully restored to levels comparable to the control line, demonstrating that the increased elimination is directly caused by host lysosomal-autophagic activity. This finding was further validated in vivo, where C57BL/6J and BALB/cByJ mice were treated with 100 \u03bcM Chloroquine via intraperitoneal injection at 24 and 2 hours prior to sporozoite infection, which similarly rescued the mutant parasite load in the liver at 4 hpi.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_6729",
+    "question": "We are planning a follow-up experiment to validate the circadian rhythms of Plasmodium berghei sporozoite motility genes (specifically myosin A and TRSP) in our Anopheles stephensi model system. Based on the experimental design used to initially characterize these rhythms, what was the specific duration of the sampling window, the time interval between dissections, and the distinct light/dark conditions applied to the mosquitoes? Furthermore, since sporozoites are often considered transcriptionally quiescent, how does the observed cycling of these motility genes challenge the traditional view, and what specific functional consequence does this rhythmic expression have on the parasite's ability to infect the mammalian liver, particularly when the biological timing of the sporozoites and the host are mismatched?",
+    "gold_answer": "The initial characterization of circadian rhythms in Plasmodium berghei sporozoites within Anopheles stephensi salivary glands utilized a high-temporal-resolution sampling design. The mosquitoes were maintained for three days (72 hours) in either a light/dark (LD) cycle (12 hours light/12 hours dark) or in constant darkness (DD). Salivary glands were dissected every 4 hours throughout this 72-hour window. This rigorous sampling revealed that 12\u201320% of sporozoite transcripts, including key motility genes like myosin A and thrombospondin-related sporozoite protein (TRSP), exhibit cyclic expression with a peak occurring early in the morning (0\u20134 hours after lights on). This finding directly challenges the traditional view that salivary-gland sporozoites are transcriptionally quiescent and cell-cycle arrested; instead, it demonstrates they are transcriptionally active and dynamically regulated to align with the vector's nocturnal feeding behavior. Functionally, this rhythmic expression primes the sporozoites for efficient transmission. Experimental evidence shows that when sporozoites and the mammalian host (mice) are biologically synchronized (e.g., nighttime sporozoites infecting nighttime-entrained mice), liver parasite loads are significantly higher compared to daytime infections. Conversely, when the biological timing of the sporozoites and the host are mismatched, this transmission advantage is abolished, indicating that the alignment of the parasite's circadian clock with the host's circadian state is critical for successful liver invasion and establishment of infection.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_7018",
+    "question": "We are designing a rescue experiment for our P. berghei NK65 PbCSPK-252/258-R mutant line, which shows reduced liver stage infectivity due to increased LC3 and LAMP1 accumulation on the parasitophorous vacuole membrane. In our current protocol, we treat C57BL/6J mice with 100 \u03bcM chloroquine intraperitoneally 24 and 2 hours prior to infection to inhibit the autophagic flux and restore parasite load. However, we are concerned about off-target effects on the proteasome, especially since our mechanistic model suggests the wild-type CSP normally interacts with host Cullin-RING ligases to modulate ubiquitylation. Can you explain the specific molecular mechanism by which chloroquine interferes with the lysosomal-autophagic pathway to rescue these mutants, and critically evaluate whether this drug also directly inhibits the Cullin-1 (CUL1) mediated ubiquitylation of CSP or the proteasomal degradation machinery that we previously mapped using the CRL inhibitor MLN4924?",
+    "gold_answer": "Chloroquine (CLQ) rescues the P. berghei NK65 PbCSPK-252/258-R mutant phenotype by acting as a weak base that accumulates within acidic lysosomes, raising the intralysosomal pH. This alkalinization inhibits the activity of lysosomal hydrolases and disrupts the fusion of autophagosomes with lysosomes, thereby preventing the degradation of the parasitophorous vacuole targeted by host autophagy. In the context of the K252/258R mutant, which lacks specific ubiquitylation sites required to evade early clearance, the parasite becomes susceptible to LC3-dependent autophagic targeting; by blocking the final lysosomal degradation step, chloroquine allows these targeted parasites to survive, restoring infection loads to wild-type levels in both ex vivo primary hepatocytes and in vivo mouse models. Crucially, chloroquine does not directly inhibit the Cullin-1 (CUL1) mediated ubiquitylation of CSP nor does it directly block the proteasomal degradation machinery. The ubiquitylation of P. berghei CSP by host CUL1 is a process mediated by E3 Cullin-RING ligases that requires neddylation for activity, a pathway specifically and potently inhibited by MLN4924, not chloroquine. While chloroquine can indirectly affect protein turnover by blocking lysosomal clearance, it does not interfere with the enzymatic transfer of ubiquitin to lysine residues K252 and K258, nor does it inhibit the 26S proteasome at the concentrations used to manipulate autophagy flux. Therefore, the rescue of the mutant phenotype observed with chloroquine is strictly due to the blockade of the autophagic-lysosomal degradation pathway downstream of the ubiquitylation defect, rather than any modulation of the upstream ubiquitylation machinery or proteasomal function.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_7671",
+    "question": "We are reproducing the DNA replication assay for Plasmodium berghei ANKA-GFP-TK sporozoites to check for mitotic activity, and I need the exact incubation details for the EdU labeling step. Specifically, what concentration of EdU was provided in the mosquito food, what was the duration of this feeding period, and at which specific Zeitgeber timepoints were the salivary glands dissected for the 48-hour time course analysis?",
+    "gold_answer": "For the DNA replication analysis of P. berghei ANKA-GFP-TK sporozoites, infected mosquitoes were fed a diet containing 200 \u00b5M of EdU (5-ethynyl-2\u2032-deoxyuridine) for a duration of either 48 hours or 72 hours. Following this labeling period, salivary glands were collected on days 22 to 24 post-bloodmeal every 6 hours over a 48-hour window. The specific Zeitgeber timepoints for dissection were ZT0 (at lights on), ZT6, ZT12 (at lights off), and ZT18.",
+    "sources": [
+      {
+        "doc_id": "c4364bbd9d91d055990ba365a7a61af2bf914d0bfaf4db058237658872c7343b",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Bento_Nat Microbiology.pdf"
+      }
+    ]
+  },
+  {
+    "id": "gen_7963",
+    "question": "In the study of Plasmodium berghei NK65 CSP ubiquitylation at residues K252 and K258, what specific standard pharmacological agent was used to inhibit host autophagy and rescue the infection load of the K252/258-R mutant parasites, and what is the primary cellular mechanism by which this agent functions?",
+    "gold_answer": "The agent used was chloroquine, which functions by raising lysosomal pH to inhibit the fusion of autophagosomes with lysosomes and block lysosomal degradation, thereby rescuing the mutant parasites that are otherwise cleared via the host autophagic pathway.",
+    "sources": [
+      {
+        "doc_id": "adc3078d06bb025f0dfd6022bd35fa34f44747bf02ef438659ee2d0f75ad60c7",
+        "file_path": "../data/papers/PAPERS MOTA LAB/2025/2025_Baptista_Scientific reports.pdf"
+      }
+    ]
+  }
+]
