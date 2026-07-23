@@ -98,7 +98,7 @@
         { data: docs, error: dErr },
         { data: done, error: vErr }
       ] = await Promise.all([
-        supabase.from('sft_candidates').select('*').order('id', { ascending: true }),
+        supabase.from('sft_candidates').select('*').eq('is_active', true).order('id', { ascending: true }),
         supabase.from('sft_documents').select('*'),
         supabase.from('sft_validations').select('candidate_id').eq('reviewer_id', reviewerId)
       ]);
