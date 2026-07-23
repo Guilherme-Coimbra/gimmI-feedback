@@ -28,10 +28,8 @@
     <!-- Gradings Global -->
     <section class="dashboard-section">
       <h2>Gradings Overview</h2>
-      <p class="section-desc">Score distribution across all criteria and all answers, as a share of the gradings each criterion received. Tap a bar for the count behind it.</p>
-      <div class="chart-container chart-fixed">
-        <canvas id="gradings-global-chart"></canvas>
-      </div>
+      <p class="section-desc">Score distribution across all answers, one chart per criterion, as a share of the gradings that criterion received. Each score is labelled with what it means for that criterion. Tap a bar for the count behind it.</p>
+      <div id="gradings-global"></div>
     </section>
 
     <!-- Gradings Detail -->
@@ -182,13 +180,23 @@
           },
           tooltip: {
             callbacks: {
+              // An axis label split over two lines arrives here as an array,
+              // which Chart.js would otherwise render as "1,Hallucinated".
+              title: items => {
+                const label = items[0].chart.data.labels[items[0].dataIndex];
+                return Array.isArray(label) ? label.filter(Boolean).join(' · ') : label;
+              },
+              // A single-dataset chart labels its bars on the axis, so the
+              // tooltip title already names the bar and the body is just the
+              // number.
               label: c => {
                 const ds = c.dataset;
                 const n = ds.counts[c.dataIndex];
                 const total = ds.totals[c.dataIndex];
+                const value = `${pct(c.parsed.y)} (${n} of ${total})`;
+                if (!ds.label) return value;
                 const note = ds.notes && ds.notes[c.dataIndex];
-                const name = note ? `${ds.label} (${note})` : ds.label;
-                return `${name}: ${pct(c.parsed.y)} (${n} of ${total})`;
+                return `${note ? `${ds.label} (${note})` : ds.label}: ${value}`;
               }
             }
           }
@@ -210,10 +218,14 @@
     }
 
     function makeChart(canvas, labels, datasets, stacked) {
+      const options = chartOptions(stacked);
+      // With one dataset the bars are keyed by the axis, so a legend would only
+      // repeat it.
+      options.plugins.legend.display = datasets.length > 1;
       const chart = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: { labels: labels, datasets: datasets },
-        options: chartOptions(stacked)
+        options: options
       });
       allCharts.push(chart);
       return chart;
@@ -225,7 +237,11 @@
     document.addEventListener('themechange', () => {
       allCharts.forEach(chart => {
         chart.data.datasets.forEach(ds => {
-          ds.backgroundColor = rampColor(ds.level, ds.ramp);
+          // A single-dataset chart colours each bar separately, so it carries a
+          // level per bar rather than one for the whole series.
+          ds.backgroundColor = ds.levels
+            ? ds.levels.map(l => rampColor(l, ds.ramp))
+            : rampColor(ds.level, ds.ramp);
           ds.borderColor = cssVar('--chart-surface');
         });
         chart.update();
@@ -683,32 +699,65 @@
       document.getElementById('stat-submissions').textContent = (submissions || []).length;
     }
 
+    // One chart per criterion rather than one grouped chart for all of them:
+    // each score means something different under each criterion ("5 · Flawless"
+    // for accuracy, "5 · Expert" for depth), and that only fits under the bar
+    // it belongs to. A shared legend could never carry it.
     function renderGradingsGlobal(gradings, criteria, options) {
+      const container = document.getElementById('gradings-global');
+
       if (!gradings || gradings.length === 0 || !criteria || criteria.length === 0) {
-        document.getElementById('gradings-global-chart').parentElement.innerHTML = '<p style="color:var(--muted-color);text-align:center;padding:2rem;">No grading data yet.</p>';
+        container.innerHTML = '<p style="color:var(--muted-color);text-align:center;padding:2rem;">No grading data yet.</p>';
         return;
       }
 
-      const labels = criteria.map(c => c.name);
       const names = scoreNames(options);
+      const levels = SCORE_VALUES.map(v => SCORE_LEVELS[v]);
 
-      // Each criterion is a share of the gradings that actually scored it, so a
-      // criterion added later reads on the same scale as the original ones.
-      const totals = criteria.map(c =>
-        gradings.filter(g => SCORE_VALUES.includes(g.scores && g.scores[c.id])).length);
+      criteria.forEach(c => {
+        const criterionNames = names[c.id] || {};
+        const counts = SCORE_VALUES.map(v =>
+          gradings.filter(g => (g.scores && g.scores[c.id]) === v).length);
 
-      // Grouped rather than stacked, so every bar is its own top and rounds.
-      const datasets = SCORE_VALUES.map(score => rampDataset({
-        label: 'Score ' + score,
-        level: SCORE_LEVELS[score],
-        ramp: 'score',
-        counts: criteria.map(c => gradings.filter(g => (g.scores && g.scores[c.id]) === score).length),
-        totals: totals,
-        isTop: true,
-        notes: criteria.map(c => (names[c.id] || {})[score] || null)
-      }));
+        // A share of the gradings that actually scored this criterion, so a
+        // criterion added later reads on the same scale as the original ones.
+        const total = counts.reduce((sum, n) => sum + n, 0);
 
-      makeChart(document.getElementById('gradings-global-chart'), labels, datasets, false);
+        const card = document.createElement('div');
+        card.className = 'criterion-chart';
+
+        const title = document.createElement('h3');
+        title.className = 'criterion-title';
+        title.textContent = c.name;
+
+        const box = document.createElement('div');
+        box.className = 'chart-small';
+        const canvas = document.createElement('canvas');
+        box.appendChild(canvas);
+
+        card.appendChild(title);
+        card.appendChild(box);
+        container.appendChild(card);
+
+        // The score and its meaning stack under each bar, so the bars carry
+        // their own key and no legend is needed.
+        const labels = SCORE_VALUES.map(v => [String(v), criterionNames[v] || '']);
+
+        makeChart(canvas, labels, [{
+          label: '',
+          data: counts.map(n => (total ? n / total * 100 : 0)),
+          counts: counts,
+          totals: SCORE_VALUES.map(() => total),
+          levels: levels,
+          ramp: 'score',
+          backgroundColor: levels.map(l => rampColor(l, 'score')),
+          borderColor: cssVar('--chart-surface'),
+          borderWidth: 2,
+          borderRadius: { topLeft: 4, topRight: 4 },
+          borderSkipped: false,
+          maxBarThickness: 72
+        }], false);
+      });
     }
 
     function renderGradingsDetail(gradings, gradeItems, criteria, options) {
@@ -1010,16 +1059,9 @@
         rankingsByQid[r.external_qid].push(r);
       });
 
-      const votesByQid = {};
-      (prefVotes || []).forEach(v => {
-        if (!votesByQid[v.external_qid]) votesByQid[v.external_qid] = [];
-        votesByQid[v.external_qid].push(v);
-      });
-
       questions.forEach(q => {
         const qAnswers = (answers || []).filter(a => a.external_qid === q.external_qid);
         const qRankings = rankingsByQid[q.external_qid] || [];
-        const qVotes = votesByQid[q.external_qid] || [];
 
         // Skip if any answer lacks a model name
         const hasAllModels = qAnswers.every(a => a.metadata && a.metadata.model);
@@ -1028,9 +1070,14 @@
         const accordion = document.createElement('div');
         accordion.className = 'accordion-item';
 
+        // Reviewers, not raw votes. One reviewer ranking three answers casts
+        // three pairwise comparisons, so counting votes here reported 24 where
+        // only 8 people had given an opinion.
+        const n = qRankings.length;
+
         const header = document.createElement('button');
         header.className = 'accordion-header';
-        header.innerHTML = `<span>${q.question_text.substring(0, 80)}${q.question_text.length > 80 ? '...' : ''}</span><span class="accordion-meta">${qVotes.length} vote${qVotes.length !== 1 ? 's' : ''}</span>`;
+        header.innerHTML = `<span>${q.question_text.substring(0, 80)}${q.question_text.length > 80 ? '...' : ''}</span><span class="accordion-meta">${n} ranking${n !== 1 ? 's' : ''}</span>`;
         header.type = 'button';
 
         const body = document.createElement('div');
