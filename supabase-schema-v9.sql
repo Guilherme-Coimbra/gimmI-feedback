@@ -17,10 +17,15 @@ CREATE TABLE sft_documents (
 -- 2. The generated question + gold answer pairs awaiting validation.
 -- Every candidate currently cites exactly one paper, so the source is a plain
 -- FK. Questions generated from more than one paper would need a junction table.
+--
+-- A NULL gold_answer is not missing data: those questions were generated on
+-- purpose to be unanswerable from the paper, so that the model can be trained
+-- to say so rather than invent an answer. The reviewer is asked to confirm the
+-- question really cannot be answered.
 CREATE TABLE sft_candidates (
     id TEXT PRIMARY KEY,       -- gen_NNNN from the generation pipeline
     question TEXT NOT NULL,
-    gold_answer TEXT NOT NULL,
+    gold_answer TEXT,          -- NULL = deliberately unanswerable
     doc_id TEXT NOT NULL REFERENCES sft_documents(doc_id),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );

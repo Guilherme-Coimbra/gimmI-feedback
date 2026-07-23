@@ -15,11 +15,11 @@
     <div id="voter-section"></div>
 
     <div class="actions" id="actions" style="display: none;">
-      <a href="submit.html" class="btn">Submit a question for future feedback</a>
       <a href="compare.html" class="btn">Compare answers for feedback</a>
       <a href="grade.html" class="btn">Grade answers for feedback</a>
       <a href="validate.html" class="btn">Validate generated questions</a>
-      <a href="dashboard.html" class="btn">View feedback dashboard</a>
+      <a href="submit.html" class="btn btn-contribute">Submit a question for future feedback</a>
+      <a href="dashboard.html" class="btn btn-view">View feedback dashboard</a>
     </div>
   </div>
 
@@ -56,11 +56,11 @@
         <form id="voter-form" style="margin-bottom: 1.5rem;">
           <div class="form-group">
             <label for="voter-id">${intro}</label>
-            <input type="text" id="voter-id" placeholder="e.g. gc01052003" required>
-            <p style="font-size: 0.85rem; color: var(--muted-color); margin-top: 0.5rem; line-height: 1.4;">
+            <p style="font-size: 0.85rem; color: var(--muted-color); margin-bottom: 0.6rem; line-height: 1.4;">
               Choose any ID you like, but use the same one every time.<br>
               Tip: first initials + birthdate (e.g. <strong>gc01052003</strong>)
             </p>
+            <input type="text" id="voter-id" placeholder="e.g. gc01052003" required>
             <p id="voter-error" style="font-size: 0.85rem; color: var(--danger-color); margin-top: 0.5rem; display: none;"></p>
           </div>
           <button type="submit" class="btn">Continue</button>

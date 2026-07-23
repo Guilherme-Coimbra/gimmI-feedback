@@ -26,9 +26,15 @@
         <div class="question-display" id="question-display"></div>
       </div>
 
-      <div class="qa-block">
-        <h3>Gold answer</h3>
+      <div class="qa-block" id="answer-block">
+        <h3 id="answer-heading">Gold answer</h3>
         <div class="answer-display" id="answer-display"></div>
+        <div class="unanswerable-note" id="unanswerable-note">
+          <strong>This question was written to be unanswerable.</strong>
+          It is a deliberately tricky question the paper cannot answer, used to teach the
+          model to say so instead of inventing something. There is no gold answer to check —
+          just confirm the paper really cannot answer it.
+        </div>
       </div>
 
       <form id="validation-form">
@@ -36,21 +42,22 @@
           <label class="verdict-option" id="opt-valid">
             <input type="radio" name="verdict" value="valid" required>
             <div>
-              <span class="verdict-name">Looks good</span>
-              <span class="verdict-desc">The question is sensible and the answer is accurate.</span>
+              <span class="verdict-name" id="valid-name">Looks good</span>
+              <span class="verdict-desc" id="valid-desc">The question is sensible and the answer is accurate.</span>
             </div>
           </label>
           <label class="verdict-option" id="opt-bad">
             <input type="radio" name="verdict" value="not_good" required>
             <div>
-              <span class="verdict-name">Not good</span>
-              <span class="verdict-desc">Something is wrong — tell us what below.</span>
+              <span class="verdict-name" id="bad-name">Not good</span>
+              <span class="verdict-desc" id="bad-desc">Something is wrong — tell us what below.</span>
             </div>
           </label>
         </div>
 
         <div class="form-group" id="comment-group">
           <label for="comment">What is wrong with it? <span id="comment-required" style="font-weight: normal; color: var(--muted-color);">(optional)</span></label>
+
           <textarea id="comment" placeholder="e.g. The answer states K266 but the paper says K260..."></textarea>
         </div>
 
@@ -134,7 +141,25 @@
 
     function renderCandidate() {
       document.getElementById('question-display').textContent = currentCandidate.question;
-      document.getElementById('answer-display').textContent = formatAnswerText(currentCandidate.gold_answer);
+
+      // A candidate with no gold answer is one of the deliberately unanswerable
+      // questions, so the reviewer is asked a different thing about it.
+      const unanswerable = !currentCandidate.gold_answer;
+      document.getElementById('answer-display').style.display = unanswerable ? 'none' : 'block';
+      document.getElementById('unanswerable-note').style.display = unanswerable ? 'block' : 'none';
+      document.getElementById('answer-heading').textContent = unanswerable ? 'No answer expected' : 'Gold answer';
+      if (!unanswerable) {
+        document.getElementById('answer-display').textContent = formatAnswerText(currentCandidate.gold_answer);
+      }
+
+      document.getElementById('valid-name').textContent = unanswerable ? 'Correctly unanswerable' : 'Looks good';
+      document.getElementById('valid-desc').textContent = unanswerable
+        ? 'The paper genuinely cannot answer this question.'
+        : 'The question is sensible and the answer is accurate.';
+      document.getElementById('bad-name').textContent = unanswerable ? 'Actually answerable' : 'Not good';
+      document.getElementById('bad-desc').textContent = unanswerable
+        ? 'The paper does answer this — tell us where below.'
+        : 'Something is wrong — tell us what below.';
 
       const doc = docsById[currentCandidate.doc_id];
       const sourceEl = document.getElementById('source-doc');

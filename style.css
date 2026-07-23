@@ -28,6 +28,8 @@
   --rank-2: #5598e7;
   --rank-3: #2a78d6;
   --rank-4: #184f95;
+  --contribute-color: #835ccc;
+  --contribute-hover: #9575d9;
 }
 
 :root[data-theme="light"] {
@@ -56,6 +58,8 @@
   --rank-2: #2a78d6;
   --rank-3: #5598e7;
   --rank-4: #86b6ef;
+  --contribute-color: #6f42c1;
+  --contribute-hover: #5a349f;
 }
 
 /* Theme toggle (injected by theme.js) */
@@ -155,6 +159,28 @@ body.home {
 
 .btn:active {
   transform: scale(0.98);
+}
+
+/* Home actions are coloured by what they ask of the reviewer: reviewing work
+   (the default accent), contributing a new question, or just looking. */
+.btn-contribute {
+  background-color: var(--contribute-color);
+}
+
+.btn-contribute:hover {
+  background-color: var(--contribute-hover);
+}
+
+.btn-view {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.btn-view:hover {
+  background-color: transparent;
+  border-color: var(--accent-color);
+  color: var(--accent-color);
 }
 
 /* General page layout */
@@ -758,6 +784,23 @@ body.home {
 
 .source-doc .btn {
   margin-top: 0.9rem;
+}
+
+.unanswerable-note {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--contribute-color);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: var(--muted-color);
+}
+
+.unanswerable-note strong {
+  display: block;
+  color: var(--text-color);
+  margin-bottom: 0.35rem;
 }
 
 .qa-block h3 {
