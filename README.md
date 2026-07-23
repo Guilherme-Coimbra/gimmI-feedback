@@ -25,6 +25,7 @@ A static website for collecting structured feedback from scientists on AI-genera
 4. **Validate Generated Questions** (`validate.html`)
    - Checks question/answer pairs generated from lab papers before they are used as SFT training data.
    - One pair at a time: read it, mark it good or not, submit, the next one loads. A reviewer is never shown a pair they have already judged.
+   - Previous/Next arrows step through the pairs still waiting on that reviewer, so one can be left for later or a whole paper worked through in a sitting. Any verdict or comment in progress is cleared on the way, and a submitted pair drops out of the list.
    - The source paper is named above every pair, with a download button when the PDF is available.
    - Rejections must carry a comment saying what is wrong.
    - Some questions are **deliberately unanswerable** — written so the paper cannot answer them, to teach the model to say so instead of inventing something. These have no gold answer; the page explains this and asks the reviewer to confirm the paper really cannot answer it.

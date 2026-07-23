@@ -173,6 +173,7 @@ body.home {
   transform: scale(0.98);
 }
 
+
 /* Home actions are coloured by what they ask of the reviewer: reviewing work
    (the default accent), contributing a new question, or just looking. */
 .btn-contribute {
@@ -193,6 +194,21 @@ body.home {
   background-color: transparent;
   border-color: var(--accent-color);
   color: var(--accent-color);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn:disabled:active {
+  transform: none;
+}
+
+/* Placed after the hover rule so a disabled outline button stays inert. */
+.btn-view:disabled:hover {
+  border-color: var(--border-color);
+  color: var(--text-color);
 }
 
 /* General page layout */
@@ -828,6 +844,14 @@ body.home {
 
 .source-doc .btn {
   margin-top: 0.9rem;
+}
+
+/* Stepping through the pairs still waiting on this reviewer. */
+.pair-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .unanswerable-note {
