@@ -22,7 +22,15 @@ A static website for collecting structured feedback from scientists on AI-genera
    - Each criterion has 3 score levels (5 / 3 / 1) with descriptive labels, plus optional free-text comments.
    - Each reviewer grades every available answer exactly once.
 
-4. **Dashboard** (`dashboard.html`)
+4. **Validate Generated Questions** (`validate.html`)
+   - Checks question/answer pairs generated from lab papers before they are used as SFT training data.
+   - One pair at a time: read it, mark it good or not, submit, the next one loads. A reviewer is never shown a pair they have already judged.
+   - The source paper is named above every pair, with a download button when the PDF is available.
+   - Rejections must carry a comment saying what is wrong.
+   - Some questions are **deliberately unanswerable** — written so the paper cannot answer them, to teach the model to say so instead of inventing something. These have no gold answer; the page explains this and asks the reviewer to confirm the paper really cannot answer it.
+   - Candidates are released in batches, so reviewers see a finishable set rather than everything at once.
+
+5. **Dashboard** (`dashboard.html`)
    - Headline counts, score distributions, and preference results.
    - Preference charts show how often each model took each position (1st / 2nd / 3rd), globally and per question, plus a transition matrix of which model tends to place 2nd behind each winner.
    - Submitted questions are listed and can be revised in place by any reviewer; every edit is kept as a new version with a version picker.
@@ -62,26 +70,32 @@ Dark by default, with a toggle in the corner persisted to `localStorage`. Chart 
 ├── submit.html                      # Form to submit new questions
 ├── compare.html                     # Bracket-based answer comparison
 ├── grade.html                       # Single-answer rubric grading
+├── validate.html                    # SFT candidate validation
 ├── dashboard.html                   # Results, charts, editable submissions
 ├── style.css                        # Shared stylesheet, light + dark themes
 ├── theme.js                         # Theme toggle, applied before first paint
 ├── answer-format.js                 # Shared answer-text normalisation
 │
-├── supabase-schema.sql              # v1  questions, votes, submissions
-├── supabase-schema-v2.sql           # v2  answers table, revised votes
-├── supabase-schema-v3.sql           # v3  pair tracking in votes
-├── supabase-schema-v4.sql           # v4  grading tables
-├── supabase-schema-v5.sql           # v5  drops votes, adds preference_votes
-├── supabase-schema-v6.sql           # v6  reviewer_aliases
-├── supabase-schema-v7.sql           # v7  submission_versions
-├── supabase-schema-v8.sql           # v8  versioned preferred_length
+├── supabase-schema.sql              # v1   questions, votes, submissions
+├── supabase-schema-v2.sql           # v2   answers table, revised votes
+├── supabase-schema-v3.sql           # v3   pair tracking in votes
+├── supabase-schema-v4.sql           # v4   grading tables
+├── supabase-schema-v5.sql           # v5   drops votes, adds preference_votes
+├── supabase-schema-v6.sql           # v6   reviewer_aliases
+├── supabase-schema-v7.sql           # v7   submission_versions
+├── supabase-schema-v8.sql           # v8   versioned preferred_length
+├── supabase-schema-v9.sql           # v9   SFT validation tables
+├── supabase-schema-v10.sql          # v10  staged release of SFT candidates
 │
 ├── supabase-initial-data-seed.sql   # Questions, answers, grade items
 ├── supabase-responses-seed.sql      # The 8 Google Form respondents
 ├── supabase-seed-submissions.sql    # 20 collected question suggestions
+├── supabase-seed-sft-candidates.sql # 2 papers + 44 generated Q&A pairs
 ├── supabase-fix-newlines.sql        # One-off repair of literal \n in answers
 ├── supabase-test-data.sql           # Sample question + answers
-└── supabase-test-data-grading.sql   # Sample grade items
+├── supabase-test-data-grading.sql   # Sample grade items
+│
+└── candidates_2025.json             # Source data the SFT seed is generated from
 ```
 
 Schema files are cumulative migrations — apply them in order on a fresh database.
@@ -183,6 +197,64 @@ The rubric and its score levels.
 
 `UNIQUE(grader_id, grade_item_id)` prevents the same person grading an answer twice.
 
+### `sft_documents`
+The papers the SFT questions were generated from.
+
+| Column | Type | Description |
+|---|---|---|
+| `doc_id` | text | Content hash from the generation pipeline (PK) |
+| `title` | text | Paper title, shown above each pair |
+| `authors` | text | Author list, shown under the title |
+| `file_name` | text | Original filename, kept as provenance |
+| `doc_url` | text | Public URL to the PDF; **NULL hides the download button** |
+
+### `sft_candidates`
+Generated question + gold answer pairs awaiting validation.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | text | `gen_NNNN` from the generation pipeline (PK) |
+| `question` | text | The generated question |
+| `gold_answer` | text | The expected answer — **NULL means deliberately unanswerable** |
+| `doc_id` | text | References `sft_documents(doc_id)` |
+| `is_active` | boolean | Whether reviewers are shown it yet; defaults to `FALSE` |
+
+Every candidate currently cites exactly one paper, so the source is a plain FK. Questions generated from more than one paper would need a junction table.
+
+### `sft_validations`
+One verdict per reviewer per candidate.
+
+| Column | Type | Description |
+|---|---|---|
+| `candidate_id` | text | References `sft_candidates(id)` |
+| `reviewer_id` | text | The reviewer's ID |
+| `verdict` | text | `valid` or `not_good` |
+| `comment` | text | Required when the verdict is `not_good` |
+
+`UNIQUE(reviewer_id, candidate_id)` prevents double-counting a resubmission, and a `CHECK` constraint enforces the comment on rejections at the database level, because the anon key can insert directly and bypass the form.
+
+---
+
+## Operational Notes
+
+### Releasing more SFT candidates
+
+All 44 generated pairs are seeded, but only those with `is_active = TRUE` are served. The first batch is 20: ten from each paper, including all four deliberately unanswerable questions.
+
+To release the rest — no deploy needed:
+
+```sql
+UPDATE sft_candidates SET is_active = TRUE;
+```
+
+Or a few at a time with `WHERE id IN (...)`. Reviewers who finished the earlier batch are shown the new ones on their next visit; completion is tracked per candidate, so nothing is re-validated.
+
+### Paper PDFs
+
+The papers live in a **public** Supabase Storage bucket named `papers`, and `sft_documents.doc_url` points at them. The bucket must be public — the anon key cannot sign private URLs, and the download button is a plain link. Filenames containing spaces need `%20` in the URL.
+
+`doc_url` accepts any URL, so a paper that cannot be redistributed can point at its DOI instead of a hosted copy.
+
 ---
 
 ## Local Development
@@ -213,17 +285,19 @@ The site auto-deploys from `main` via GitHub Pages.
 
 ## Security Notes
 
-- The Supabase **Anon Key** is embedded in the public JavaScript. That is normal for client-side apps: **Row Level Security** limits it to `SELECT` on reference data and `INSERT` on votes, gradings, submissions, revisions and aliases. No table grants public `UPDATE` or `DELETE`.
+- The Supabase **Anon Key** is embedded in the public JavaScript. That is normal for client-side apps: **Row Level Security** limits it to `SELECT` on reference data and `INSERT` on votes, gradings, submissions, revisions, aliases and validations. No table grants public `UPDATE` or `DELETE`.
 - The **Service Role Key** must never appear in the frontend.
 - **There is no authentication.** A reviewer ID is self-asserted, so anyone with the Anon Key could write rows under someone else's ID. This is accepted for a small, trusted, low-traffic research tool.
 - **Claim links are guessable** (`forms_respondent_1` … `_8`) and the alias table accepts public inserts, so an unclaimed link could in principle be claimed by the wrong person. Claim links should be sent individually, and unclaimed ones are worth checking before a session.
+- **The `papers` Storage bucket is public**, so anyone with the URL can download the PDFs without a key. Only host papers you are allowed to redistribute; point `doc_url` at a DOI otherwise.
 
 ---
 
 ## Known Gaps
 
-- [ ] `preference_votes` has no uniqueness constraint, so a double submission can insert duplicate votes. The app avoids it, but the database does not enforce it.
-- [ ] Grading comments are collected but not shown anywhere in the dashboard.
+- [ ] `preference_votes` has no uniqueness constraint, so a double submission can insert duplicate votes. The app avoids it, but the database does not enforce it. `gradings` and `sft_validations` both do.
+- [ ] Grading comments are collected but not shown anywhere in the dashboard. The same is true of SFT rejection comments, which are the whole point of a rejection.
+- [ ] SFT validation results do not appear on the dashboard at all.
 - [ ] No export or backup of collected responses.
 - [ ] No way to restore an older version of a submitted question, only to view it.
 - [ ] Bulk import of questions and answers is still manual SQL.
