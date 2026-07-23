@@ -67,6 +67,13 @@
       <p class="section-desc">Questions suggested through the submission form, with the preferred answer length and the topics each answer should cover. Submitters are not identified.</p>
       <div id="submissions-list"></div>
     </section>
+
+    <!-- Generated question validation -->
+    <section class="dashboard-section">
+      <h2>Generated Question Validation</h2>
+      <p class="section-desc">Reviews of the question and answer pairs generated from the lab papers. Click a question to see how the verdicts split and what reviewers said. Reviewers are not identified.</p>
+      <div id="validations-list"></div>
+    </section>
   </div>
 
   <script type="module">
@@ -185,6 +192,24 @@
           .order('version', { ascending: true })
       ]);
 
+      // The SFT validation track is a separate section: if those tables are
+      // unavailable the rest of the dashboard should still load.
+      const [
+        { data: candidates, error: candErr },
+        { data: docs, error: docErr },
+        { data: validations, error: valErr }
+      ] = await Promise.all([
+        supabase.from('sft_candidates')
+          .select('id, question, gold_answer, doc_id')
+          .eq('is_active', true)
+          .order('id', { ascending: true }),
+        supabase.from('sft_documents').select('doc_id, title'),
+        // reviewer_id is deliberately left out so it never reaches the browser.
+        supabase.from('sft_validations')
+          .select('candidate_id, verdict, comment, created_at')
+          .order('created_at', { ascending: true })
+      ]);
+
       // Revision history is an enhancement: if that table is unavailable the
       // rest of the dashboard should still load, showing the original wording.
       if (vErr) console.warn('submission_versions unavailable, showing originals only', vErr);
@@ -201,6 +226,162 @@
       renderPreferencesGlobal(prefVotes, answers, questions);
       renderSubmissions(submissions, versions);
       renderPreferencesDetail(prefVotes, answers, questions);
+
+      if (candErr || docErr || valErr) {
+        console.warn('SFT validation data unavailable', candErr, docErr, valErr);
+        document.getElementById('validations-list').innerHTML =
+          '<p style="color:var(--muted-color);">Validation data is unavailable right now.</p>';
+      } else {
+        renderValidations(candidates, docs, validations);
+      }
+    }
+
+    function renderValidations(candidates, docs, validations) {
+      const container = document.getElementById('validations-list');
+
+      if (!candidates || candidates.length === 0) {
+        container.innerHTML = '<p style="color:var(--muted-color);">No generated questions released yet.</p>';
+        return;
+      }
+
+      const titleByDoc = {};
+      (docs || []).forEach(d => { titleByDoc[d.doc_id] = d.title; });
+
+      const byCandidate = {};
+      (validations || []).forEach(v => {
+        if (!byCandidate[v.candidate_id]) byCandidate[v.candidate_id] = [];
+        byCandidate[v.candidate_id].push(v);
+      });
+
+      candidates.forEach(c => {
+        const reviews = byCandidate[c.id] || [];
+        // A pair with no gold answer was written to be unanswerable, so the
+        // verdicts mean something different and are labelled accordingly.
+        const unanswerable = !c.gold_answer;
+        const good = reviews.filter(v => v.verdict === 'valid').length;
+        const bad = reviews.length - good;
+
+        const accordion = document.createElement('div');
+        accordion.className = 'accordion-item';
+
+        const header = document.createElement('button');
+        header.className = 'accordion-header';
+        header.type = 'button';
+        const label = document.createElement('span');
+        label.textContent = c.question.length > 80 ? c.question.substring(0, 80) + '...' : c.question;
+        const meta = document.createElement('span');
+        meta.className = 'accordion-meta';
+        meta.textContent = reviews.length + ' review' + (reviews.length !== 1 ? 's' : '');
+        header.appendChild(label);
+        header.appendChild(meta);
+
+        const body = document.createElement('div');
+        body.className = 'accordion-body';
+        body.style.display = 'none';
+
+        if (titleByDoc[c.doc_id]) {
+          const source = document.createElement('div');
+          source.className = 'sub-heading';
+          source.textContent = 'Generated from';
+          const title = document.createElement('p');
+          title.className = 'source-title';
+          title.textContent = titleByDoc[c.doc_id];
+          body.appendChild(source);
+          body.appendChild(title);
+        }
+
+        const answerHeading = document.createElement('div');
+        answerHeading.className = 'sub-heading';
+        answerHeading.textContent = unanswerable ? 'No answer expected' : 'Gold answer';
+        body.appendChild(answerHeading);
+
+        if (unanswerable) {
+          const note = document.createElement('div');
+          note.className = 'unanswerable-note';
+          note.style.display = 'block';
+          note.innerHTML = '<strong>This question was written to be unanswerable.</strong> ' +
+            'Reviewers were asked to confirm the paper really cannot answer it.';
+          body.appendChild(note);
+        } else {
+          const answer = document.createElement('div');
+          answer.className = 'answer-display';
+          answer.textContent = formatAnswerText(c.gold_answer);
+          body.appendChild(answer);
+        }
+
+        const verdictHeading = document.createElement('div');
+        verdictHeading.className = 'sub-heading';
+        verdictHeading.textContent = 'Verdicts';
+        body.appendChild(verdictHeading);
+
+        if (reviews.length === 0) {
+          const none = document.createElement('p');
+          none.style.color = 'var(--muted-color)';
+          none.textContent = 'Not reviewed yet.';
+          body.appendChild(none);
+        } else {
+          const bars = [
+            { name: unanswerable ? 'Correctly unanswerable' : 'Looks good', count: good, cls: 'good' },
+            { name: unanswerable ? 'Actually answerable' : 'Not good', count: bad, cls: 'bad' }
+          ];
+
+          const hist = document.createElement('div');
+          hist.className = 'mini-histogram';
+          hist.innerHTML = bars.map(b => `
+            <div class="hist-bar">
+              <div class="hist-track">
+                <div class="hist-fill hist-${b.cls}" style="height: ${b.count / reviews.length * 100}%">
+                  <div class="hist-count">${b.count}</div>
+                </div>
+              </div>
+              <div class="hist-label">${b.name}</div>
+            </div>
+          `).join('');
+          body.appendChild(hist);
+
+          const commentsHeading = document.createElement('div');
+          commentsHeading.className = 'sub-heading';
+          commentsHeading.textContent = 'What reviewers said';
+          body.appendChild(commentsHeading);
+
+          const withComments = reviews.filter(v => v.comment && v.comment.trim());
+          if (withComments.length === 0) {
+            const none = document.createElement('p');
+            none.style.color = 'var(--muted-color)';
+            none.textContent = 'No comments left on this one.';
+            body.appendChild(none);
+          } else {
+            withComments.forEach(v => {
+              const item = document.createElement('div');
+              item.className = 'review-item';
+
+              const chip = document.createElement('span');
+              chip.className = 'review-verdict review-' + (v.verdict === 'valid' ? 'good' : 'bad');
+              chip.textContent = v.verdict === 'valid'
+                ? (unanswerable ? 'Correctly unanswerable' : 'Looks good')
+                : (unanswerable ? 'Actually answerable' : 'Not good');
+
+              const text = document.createElement('p');
+              text.className = 'review-comment';
+              text.textContent = v.comment.trim();
+
+              item.appendChild(chip);
+              item.appendChild(text);
+              body.appendChild(item);
+            });
+          }
+        }
+
+        header.addEventListener('click', () => {
+          const isOpen = body.style.display === 'block';
+          body.style.display = isOpen ? 'none' : 'block';
+          header.classList.toggle('open', !isOpen);
+        });
+
+        accordion.appendChild(header);
+        accordion.appendChild(body);
+        container.appendChild(accordion);
+      });
     }
 
     function renderSubmissions(submissions, versions) {

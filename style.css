@@ -732,6 +732,38 @@ body.home {
   color: var(--muted-color);
 }
 
+/* SFT validation results — the two verdicts are opposites rather than steps on
+   a scale, so they get the approve/reject colours, not the ordinal ramp. */
+.hist-good { background: var(--ok-color); }
+.hist-bad { background: var(--danger-color); }
+
+.review-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Outlined rather than filled: neither verdict colour carries white text at
+   4.5:1 on the dark theme, but both clear it as text on the card surface. */
+.review-verdict {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.review-good { color: var(--ok-color); }
+.review-bad { color: var(--danger-color); }
+
+.review-comment {
+  margin-top: 0.5rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 /* Matrix table */
 .matrix-table,
 .detail-table {
